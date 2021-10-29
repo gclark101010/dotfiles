@@ -53,7 +53,6 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
       :config (which-key-mode))
 
 #+END_SRC
-
 * The rest
 #+BEGIN_SRC emacs-lisp
 
@@ -240,12 +239,18 @@ http://ergoemacs.org/emacs/elisp_datetime.html
     )
 #+END_SRC
 * Org mode things
+** todo Keywords
+#+begin_src emacs-lisp
+  (setq org-todo-keywords
+    '((sequence "TODO(t)" "IN-PROGRESS(p)" "|" "CANCELLED(c)" "DONE(d)")))
+
+#+end_src
+
 ** Timestamp
 Below sourced from [[https://emacs.stackexchange.com/a/60590][StackOverflow]]
 #+BEGIN_SRC emacs-lisp
 (setq org-time-stamp-formats '("<%Y-%m-%d %a>" . "<%Y-%m-%d %a %H:%M%z>"))
 #+END_SRC
-
 ** Capture templates
 Following along with Prot for this:
 [[https://www.youtube.com/watch?v=qCdScs4YO8k][Emacs: Introduction to ORG-CAPTURE (YouTube)]]

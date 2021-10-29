@@ -166,6 +166,9 @@
     )
   )
 
+(setq org-todo-keywords
+  '((sequence "TODO(t)" "IN-PROGRESS(p)" "CANCELLED(c)" "DONE(d)")))
+
 (setq org-time-stamp-formats '("<%Y-%m-%d %a>" . "<%Y-%m-%d %a %H:%M%z>"))
 
 ;;(setq org-default-notes-file (concat default-directory "meetings.org"))
@@ -331,3 +334,6 @@ supported in Scala."
 (use-package evil)
 (require 'evil)
 (evil-mode 0)
+
+(require 'loadhist)
+(file-dependents (feature-file 'cl))

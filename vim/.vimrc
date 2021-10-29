@@ -26,6 +26,7 @@ call plug#begin('~/.vim/plugged')
         Plug 'preservim/nerdtree'
         Plug 'tpope/vim-abolish'
         Plug 'hashivim/vim-terraform'
+        Plug 'nathanaelkane/vim-indent-guides'
         " Initialize plugin system
 call plug#end()
 

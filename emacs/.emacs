@@ -21,8 +21,6 @@
 ;; (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
 ;; The above is the default in recent emacsen
  
-(setq org-todo-keywords
-  '((sequence "TODO" "IN-PROGRESS" "CANCELLED" "DONE")))
  
 ;; org minor modes
 (add-hook 'org-mode-hook 'org-indent-mode)
