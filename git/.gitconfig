@@ -14,3 +14,6 @@ df = diff
 b = branch
 r = reset
 lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+[pager]
+	stash = false
+    branch = false

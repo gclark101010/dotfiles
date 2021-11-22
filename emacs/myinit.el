@@ -167,7 +167,7 @@
   )
 
 (setq org-todo-keywords
-  '((sequence "TODO(t)" "IN-PROGRESS(p)" "CANCELLED(c)" "DONE(d)")))
+  '((sequence "TODO(t)" "IN-PROGRESS(p)" "|" "CANCELLED(c)" "DONE(d)")))
 
 (setq org-time-stamp-formats '("<%Y-%m-%d %a>" . "<%Y-%m-%d %a %H:%M%z>"))
 
