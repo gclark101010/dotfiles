@@ -32,7 +32,7 @@
  ;; If there is more than one, they won't work right.
  '(org-startup-folded 'content)
  '(package-selected-packages
-   '(org-ac org-cliplink pinentry scala-mode ace-window counsel-projectile projectile elpy elfeed-goodies elfeed-org elfeed iedit expand-region evil yasnippet-snippets yasnippet exec-path-from-shell jedi flycheck htmlize ox-reveal zenburn-theme auto-complete counsel swiper which-key try use-package)))
+   '(yaml-mode org-ac org-cliplink pinentry scala-mode ace-window counsel-projectile projectile elpy elfeed-goodies elfeed-org elfeed iedit expand-region evil yasnippet-snippets yasnippet exec-path-from-shell jedi flycheck htmlize ox-reveal zenburn-theme auto-complete counsel swiper which-key try use-package)))
  
 
 (custom-set-faces

@@ -438,7 +438,6 @@ copy/pasty from https://code.orgmode.org/bzg/org-mode/commit/90986a8e2fe881105cc
   (evil-mode 0)
 #+END_SRC
 
-
 * Easy GPG Ascii
 ** COMMENT this will not be tangled
 #+BEGIN_SRC emacs-lisp
@@ -481,4 +480,16 @@ https://github.com/hlissner/doom-emacs/issues/3372
 
 #+RESULTS:
 | /Users/g.clark/.emacs.d/elpa/ace-jump-mode-20140616.815/ace-jump-mode.elc |
+* yaml-mode
+#+begin_src emacs-lisp
+  (require 'yaml-mode)
+  (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
+
+  (add-hook 'yaml-mode-hook
+    '(lambda ()
+       (define-key yaml-mode-map "\C-m" 'newline-and-indent)))
+#+end_src
+
+#+RESULTS:
+| yaml-set-imenu-generic-expression | (lambda nil (define-key yaml-mode-map  'newline-and-indent)) |
 
