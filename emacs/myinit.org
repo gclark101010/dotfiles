@@ -169,7 +169,7 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
     (global-undo-tree-mode))
 #+END_SRC
 
-* Misc packages
+* Expand Region
 #+BEGIN_SRC emacs-lisp
   (use-package expand-region
     :ensure t
@@ -281,6 +281,11 @@ Following along with Prot for this:
         )
 #+END_SRC
 
+** Agenda
+#+begin_src emacs-lisp
+  (global-set-key "\C-ca" 'org-agenda)
+ '(org-agenda-files '("~/Documents/org/Week26.org"))
+#+end_src
 ** Babel & Literate Programming
 Babel
 #+BEGIN_SRC emacs-lisp
