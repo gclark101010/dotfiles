@@ -239,6 +239,14 @@ http://ergoemacs.org/emacs/elisp_datetime.html
     )
 #+END_SRC
 * Org mode things
+** General
+Org directory & org log into drawer (:LOGBOOK: drawer)
+#+begin_src emacs-lisp
+  (custom-set-variables
+     '(org-directory "~/Documents/org")
+     '(org-log-into-drawer t)
+   )
+#+end_src
 ** todo Keywords
 #+begin_src emacs-lisp
   (setq org-todo-keywords
@@ -284,8 +292,10 @@ Following along with Prot for this:
 ** Agenda
 #+begin_src emacs-lisp
   (global-set-key "\C-ca" 'org-agenda)
- '(org-agenda-files '("~/Documents/org/Week26.org"))
+  (custom-set-variables
+   '(org-agenda-files (list org-directory)))
 #+end_src
+
 ** Babel & Literate Programming
 Babel
 #+BEGIN_SRC emacs-lisp

@@ -166,6 +166,11 @@
     )
   )
 
+(custom-set-variables
+   '(org-directory "~/Documents/org")
+   '(org-log-into-drawer t)
+ )
+
 (setq org-todo-keywords
   '((sequence "TODO(t)" "IN-PROGRESS(p)" "|" "CANCELLED(c)" "DONE(d)")))
 
@@ -195,6 +200,10 @@
          )
         )
       )
+
+(global-set-key "\C-ca" 'org-agenda)
+(custom-set-variables
+ '(org-agenda-files (list org-directory)))
 
 (use-package scala-mode
     :interpreter
