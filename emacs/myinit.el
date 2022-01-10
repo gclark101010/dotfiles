@@ -203,7 +203,8 @@
 
 (global-set-key "\C-ca" 'org-agenda)
 (custom-set-variables
- '(org-agenda-files (list org-directory)))
+ '(org-agenda-files '("~/Documents/org/EngLog.org"))
+ )
 
 (use-package scala-mode
     :interpreter

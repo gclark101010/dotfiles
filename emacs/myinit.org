@@ -433,6 +433,22 @@ copy/pasty from https://code.orgmode.org/bzg/org-mode/commit/90986a8e2fe881105cc
 
 #+RESULTS:
 : ob-scala
+** Custom Functions (Org Specific)
+#+begin_src emacs-lisp
+  ;;; From Rainer König's Emacs Org-mode course on Udemy
+  (defun my/copy-id-to-clipboard() " Copy the ID property value to killring, if no ID is there then create a new unique Id. This function works only in org-mode buffers.
+
+  The purpose of this function is to easily construct id:-links to org-mode items. If its assigned to a key it saves you marking the text and copying to the killring."
+    (interactive)
+    (when (eq major-mode 'org-mode) ; do this only in org-mode buffers
+      (setq mytmpid (funcall 'org-id-get-create))
+      (kill-new mytmpid)
+      (message "Copied %s to killring (clipboard)" mytmpid)
+      ))
+
+  (global-set-key (kbd "<f5>") 'my/copy-id-to-clipboard)
+#+end_src
+
 * Recreate scratch buffer
 #+BEGIN_SRC emacs-lisp
 [[http://www.emacswiki.org/emacs/RecreateScratchBuffer][Recreate Scratch Buffer (emacswiki.org)]]
