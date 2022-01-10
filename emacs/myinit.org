@@ -293,7 +293,8 @@ Following along with Prot for this:
 #+begin_src emacs-lisp
   (global-set-key "\C-ca" 'org-agenda)
   (custom-set-variables
-   '(org-agenda-files (list org-directory)))
+   '(org-agenda-files '("~/Documents/org/EngLog.org"))
+   )
 #+end_src
 
 ** Babel & Literate Programming
