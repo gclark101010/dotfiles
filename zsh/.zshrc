@@ -14,6 +14,7 @@ compinit
 source ~/.dotfiles/zsh/.prompt.zsh
 
 # Aliases
+alias ll=ls -lh
 alias g=git
 alias tf13=/usr/local/opt/terraform@0.13/bin/terraform
 alias tf=terraform

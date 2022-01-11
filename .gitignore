@@ -84,3 +84,7 @@ flycheck_*.el
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Vim
+*.swp
+*.swo
