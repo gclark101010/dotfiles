@@ -24,7 +24,8 @@ zstyle ':vcs_info:*' enable git
 # %?: exit code of last process
 # %n@%m: user@host
 # PROMPT='%B${vcs_info_msg_0_}%F{12}%2~%f %# %b'
-PROMPT='%F{12}%2~%f %B${vcs_info_msg_0_}%b%# '
+PROMPT='%F{165}%n %F{12}%2~%f %B${vcs_info_msg_0_}%b%# '
 # rprompt is located on the right side of the terminal
-RPROMPT='%(?..%F{red}(%?%) %f)%n@%m'
+# RPROMPT='%(?..%F{red}(%?%) %f)%n@%m'
+RPROMPT='%(?..%F{red}(%?%) %f)%D %*'
 
