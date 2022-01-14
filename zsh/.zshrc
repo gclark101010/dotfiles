@@ -31,3 +31,7 @@ my-backward-kill-word () {
 }
 zle -N my-backward-kill-word
 bindkey '^w' my-backward-kill-word
+
+# https://jdhao.github.io/2021/03/24/zsh_history_setup/
+setopt INC_APPEND_HISTORY_TIME  # append command to history file immediately after execution
+setopt EXTENDED_HISTORY 
