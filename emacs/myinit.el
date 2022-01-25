@@ -344,6 +344,25 @@ The purpose of this function is to easily construct id:-links to org-mode items.
 
 (global-set-key (kbd "<f5>") 'my/copy-id-to-clipboard)
 
+;;; From Rainer König's Emacs Org-mode course on Udemy (pg 92 in book)
+(defun my/copy-idlink-to-clipboard() "Copy an ID link with the headline to killring, if no ID is there then createa  new unique ID. This function works only in org-mode or org-agenda buffers.
+
+The purpose of this function is to easily construct id:-links to org-mode items. If its assigned to a key it saves you marking the text and copying to hte killring."
+
+       (interactive)
+       (when (eq major-mode 'org-agenda-mode)
+         (org-agenda-show)
+         (org-agenda-goto))
+       (when (eq major-mode 'org-mode) ; do this only in org-mode buffers
+         (setq mytmphead (nth 4 (org-heading-components)))
+         (setq mytmpid (funcall 'org-id-get-create))
+         (setq mytmplink (format "[[id:%s][%s]]" mytmpid mytmphead))
+         (kill-new mytmplink)
+         (message "Copied %s to killring (clipboard)" mytmplink)
+         ))
+
+(global-set-key (kbd "<f6>") 'my/copy-idlink-to-clipboard)
+
 [[http://www.emacswiki.org/emacs/RecreateScratchBuffer][Recreate Scratch Buffer (emacswiki.org)]]
 (defun create-scratch-buffer nil
    "create a scratch buffer"
