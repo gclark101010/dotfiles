@@ -1,8 +1,18 @@
-# Lines configured by zsh-newuser-install
+# Useful history options: 
+# - https://www.soberkoder.com/better-zsh-history/
+# - https://jdhao.github.io/2021/03/24/zsh_history_setup/
 HISTFILE=~/.histfile
-HISTSIZE=1000
-SAVEHIST=100000
-bindkey -e
+HISTSIZE=10000
+SAVEHIST=10000000
+HISTFILESIZE=1000000000
+
+setopt INC_APPEND_HISTORY_TIME  # append command to history file immediately after execution
+setopt EXTENDED_HISTORY 
+setopt HIST_FIND_NO_DUPS
+export HISTTIMEFORMAT="[%F %T] "
+
+bindkey -e # emacs keybindings
+
 # End of lines configured by zsh-newuser-install
 # The following lines were added by compinstall
 zstyle :compinstall filename '/Users/g.clark/.zshrc'
@@ -32,6 +42,5 @@ my-backward-kill-word () {
 zle -N my-backward-kill-word
 bindkey '^w' my-backward-kill-word
 
-# https://jdhao.github.io/2021/03/24/zsh_history_setup/
-setopt INC_APPEND_HISTORY_TIME  # append command to history file immediately after execution
-setopt EXTENDED_HISTORY 
+# google-cloud-sdk auto-complete (from homebrew instructions)
+source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
