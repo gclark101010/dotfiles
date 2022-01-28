@@ -9,6 +9,17 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
+(use-package zenburn-theme
+  :ensure t
+  :config (load-theme 'zenburn t))
+
+;; (load-theme 'tsdh-dark t)
+
+(use-package org-cliplink
+  :ensure t
+  )
+(global-set-key (kbd "C-x p i") 'org-cliplink)
+
 (setq inhibit-splash-screen t)
 (tool-bar-mode -1)
 
@@ -17,13 +28,6 @@
   ;; Line numbers? Yes plz
 (when (version<= "26.0.50" emacs-version )
   (global-display-line-numbers-mode))
-
-(use-package try
-  :ensure t)
-
-(use-package which-key
-  :ensure t
-  :config (which-key-mode))
 
 (setq ido-enable-flex-matching t)
 (setq ido-everywhere t)
@@ -57,11 +61,10 @@
     (global-auto-complete-mode t)
     ))
 
-(use-package zenburn-theme
-  :ensure t
-  :config (load-theme 'zenburn t))
-
-;; (load-theme 'tsdh-dark t)
+;; (use-package org-ac
+;;   :ensure t
+;;   :init
+;;   )
 
 ;; projectile
 (use-package projectile
@@ -76,12 +79,6 @@
 (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
 )
 
-(use-package ox-reveal
-  :ensure ox-reveal)
-;; (setq org-reveal-root "https://cdn.jsdelivr.net/reveal.js/3.0.0/")
-(setq org-reveal-root "https://cdn.jsdelivr.net/npm/reveal.js")
-(setq org-reveal-mathjax t)
-
 (use-package flycheck
   :ensure t
   :init
@@ -92,14 +89,14 @@
 (setq python-shell-completion-native-enable nil)
 
 (use-package jedi
-  :ensure t
-  :init
-  (add-hook 'python-mode-hook 'jedi:setup)
-  (add-hook 'python-mode-hook 'jedi:ac-setup)
-  )
+    :ensure t
+    :init
+    (add-hook 'python-mode-hook 'jedi:setup)
+    (add-hook 'python-mode-hook 'jedi:ac-setup)
+    )
 
 (when (memq window-system '(mac ns))
-  (exec-path-from-shell-initialize))
+  (exec-path-from-shell-initialize ))
 
 (use-package elpy
   :ensure t
@@ -169,6 +166,14 @@
     )
   )
 
+(custom-set-variables
+   '(org-directory "~/Documents/org")
+   '(org-log-into-drawer t)
+ )
+
+(setq org-todo-keywords
+  '((sequence "TODO(t@/!)" "IN-PROGRESS(p@/!)" "BLOCKED(b@/!)" "|" "CANCELLED(c@/!)" "DONE(d@)")))
+
 (setq org-time-stamp-formats '("<%Y-%m-%d %a>" . "<%Y-%m-%d %a %H:%M%z>"))
 
 ;;(setq org-default-notes-file (concat default-directory "meetings.org"))
@@ -181,8 +186,8 @@
 (setq org-capture-templates		
       '(("m" "Meeting")
         ("m1" "Meeting to org directory" entry
-         (file+headline "meetings.org" "Meetings")
-         "* %^{Meeting Title:}\nSCHEDULED: %^U\n** Agenda\n** Attendees\n** Minutes\n%?\n** Action Items\n")
+         (file+headline "~/Documents/org/meetings.org" "Meetings")
+         "** %^{Meeting Title:} %U\nSCHEDULED: %^U\n*** Attendees\n*** Minutes\n%?\n*** Action Items\n")
         ("m2" "Meeting to this directory" entry
          (function 
           (lambda ()
@@ -195,6 +200,11 @@
          )
         )
       )
+
+(global-set-key "\C-ca" 'org-agenda)
+(custom-set-variables
+ '(org-agenda-files '("~/Documents/org/EngLog.org"))
+ )
 
 (use-package scala-mode
     :interpreter
@@ -321,6 +331,38 @@ supported in Scala."
 
 ;;; ob-scala.el ends here
 
+;;; From Rainer König's Emacs Org-mode course on Udemy
+(defun my/copy-id-to-clipboard() " Copy the ID property value to killring, if no ID is there then create a new unique Id. This function works only in org-mode buffers.
+
+The purpose of this function is to easily construct id:-links to org-mode items. If its assigned to a key it saves you marking the text and copying to the killring."
+  (interactive)
+  (when (eq major-mode 'org-mode) ; do this only in org-mode buffers
+    (setq mytmpid (funcall 'org-id-get-create))
+    (kill-new mytmpid)
+    (message "Copied %s to killring (clipboard)" mytmpid)
+    ))
+
+(global-set-key (kbd "<f5>") 'my/copy-id-to-clipboard)
+
+;;; From Rainer König's Emacs Org-mode course on Udemy (pg 92 in book)
+(defun my/copy-idlink-to-clipboard() "Copy an ID link with the headline to killring, if no ID is there then createa  new unique ID. This function works only in org-mode or org-agenda buffers.
+
+The purpose of this function is to easily construct id:-links to org-mode items. If its assigned to a key it saves you marking the text and copying to hte killring."
+
+       (interactive)
+       (when (eq major-mode 'org-agenda-mode)
+         (org-agenda-show)
+         (org-agenda-goto))
+       (when (eq major-mode 'org-mode) ; do this only in org-mode buffers
+         (setq mytmphead (nth 4 (org-heading-components)))
+         (setq mytmpid (funcall 'org-id-get-create))
+         (setq mytmplink (format "[[id:%s][%s]]" mytmpid mytmphead))
+         (kill-new mytmplink)
+         (message "Copied %s to killring (clipboard)" mytmplink)
+         ))
+
+(global-set-key (kbd "<f6>") 'my/copy-idlink-to-clipboard)
+
 [[http://www.emacswiki.org/emacs/RecreateScratchBuffer][Recreate Scratch Buffer (emacswiki.org)]]
 (defun create-scratch-buffer nil
    "create a scratch buffer"
@@ -330,34 +372,17 @@ supported in Scala."
 
 (setq save-interprogram-paste-before-kill t)
 
+(setq evil-want-C-u-scroll t)
+(use-package evil)
 (require 'evil)
 (evil-mode 0)
 
-;; From https://unix.stackexchange.com/a/276430
-;; Also https://unix.stackexchange.com/questions/55638/can-emacs-use-gpg-agent-in-a-terminal-at-all/278875#278875
+(require 'loadhist)
+(file-dependents (feature-file 'cl))
 
-;; Hopefully prompt for GPG key passphrase in minibuffer, not popup
-(setenv "INSIDE_EMACS" (format "%s,comint" emacs-version))
-(pinentry-start)
+(require 'yaml-mode)
+(add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
 
-;; Decrypt GPG files in buffer
-(epa-file-enable)
-
-(setq epa-file-name-regexp "\\.\\(gpg\\|\\asc\\)\\(~\\|\\.~[0-9]+~\\)?\\'")
-(epa-file-name-regexp-update)
-
-;; Minor mode for ASCII-armored gpg-encrypted files
-(define-minor-mode auto-encryption-armored-mode
-  "Save files in encrypted, ASCII-armored format"
-  ;; The initial value.
-  nil
-  ;; The indicator for the mode line.
-  " Encrypted,Armored"
-  ;; The minor mode bindings.
-  nil
-  (if (symbol-value auto-encryption-armored-mode)
-      (set (make-local-variable 'epa-armor) t)
-    (kill-local-variable 'epa-armor))
-  )
-
-(add-to-list 'auto-mode-alist '("\\.asc$" . auto-encryption-armored-mode))
+(add-hook 'yaml-mode-hook
+  '(lambda ()
+     (define-key yaml-mode-map "\C-m" 'newline-and-indent)))

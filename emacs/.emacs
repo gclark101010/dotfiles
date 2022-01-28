@@ -8,6 +8,7 @@
 
 ;; Stuff from Zamansky
 (org-babel-load-file (expand-file-name "~/.dotfiles/emacs/myinit.org"))
+;;(org-babel-load-file (expand-file-name "myinit.org"))
 ;; End of Zamansky
 
 ;; Enable transient mark mode
@@ -20,8 +21,6 @@
 ;; (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
 ;; The above is the default in recent emacsen
  
-(setq org-todo-keywords
-  '((sequence "TODO" "IN-PROGRESS" "CANCELLED" "DONE")))
  
 ;; org minor modes
 (add-hook 'org-mode-hook 'org-indent-mode)
@@ -31,10 +30,9 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(org-startup-folded (quote content))
+ '(org-startup-folded 'content)
  '(package-selected-packages
-   (quote
-    (pinentry scala-mode ace-window counsel-projectile projectile elpy elfeed-goodies elfeed-org elfeed iedit expand-region evil yasnippet-snippets yasnippet exec-path-from-shell jedi flycheck htmlize ox-reveal zenburn-theme auto-complete counsel swiper which-key try use-package))))
+   '(yaml-mode org-ac org-cliplink pinentry scala-mode ace-window counsel-projectile projectile elpy elfeed-goodies elfeed-org elfeed iedit expand-region evil yasnippet-snippets yasnippet exec-path-from-shell jedi flycheck htmlize ox-reveal zenburn-theme auto-complete counsel swiper which-key try use-package)))
  
 
 (custom-set-faces

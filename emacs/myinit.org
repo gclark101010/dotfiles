@@ -13,6 +13,22 @@
     (package-install 'use-package))
 #+END_SRC
 
+* Theme
+#+BEGIN_SRC emacs-lisp
+(use-package zenburn-theme
+  :ensure t
+  :config (load-theme 'zenburn t))
+
+;; (load-theme 'tsdh-dark t)
+#+END_SRC
+* Cliplink
+#+begin_src emacs-lisp
+    (use-package org-cliplink
+    :ensure t
+    )
+  (global-set-key (kbd "C-x p i") 'org-cliplink)
+#+end_src
+
 * Interface tweaks
 #+BEGIN_SRC emacs-lisp 
   (setq inhibit-splash-screen t)
@@ -25,21 +41,18 @@
     (global-display-line-numbers-mode))
 #+END_SRC
 
-* Try
-#+BEGIN_SRC emacs-lisp
-(use-package try
-  :ensure t)
-
-#+END_SRC
-
 * Which key
+Issues with which-key with Emacs 27.2 running on macOS Catalina
+** TODO Debug this later
+** COMMENT This will not be tangled
 #+BEGIN_SRC emacs-lisp
-(use-package which-key
-  :ensure t
-  :config (which-key-mode))
+  ;;  (add-to-list 'load-path "/Users/g.clark/.dotfiles/emacs/which-key.el")
+
+    (use-package which-key
+      :ensure t
+      :config (which-key-mode))
 
 #+END_SRC
-
 * The rest
 #+BEGIN_SRC emacs-lisp
 
@@ -67,20 +80,24 @@
     (define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
     ))
 
-(use-package auto-complete
-  :ensure t
-  :init
-  (progn
-    (ac-config-default)
-    (global-auto-complete-mode t)
-    ))
 
-(use-package zenburn-theme
-  :ensure t
-  :config (load-theme 'zenburn t))
 
-;; (load-theme 'tsdh-dark t)
 #+END_SRC
+* Auto-complete/company
+#+begin_src emacs-lisp
+  (use-package auto-complete
+    :ensure t
+    :init
+    (progn
+      (ac-config-default)
+      (global-auto-complete-mode t)
+      ))
+
+  ;; (use-package org-ac
+  ;;   :ensure t
+  ;;   :init
+  ;;   )
+#+end_src
 
 * Projectile
 #+BEGIN_SRC emacs-lisp
@@ -97,18 +114,6 @@
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   )
 #+END_SRC
-
-* Reveal
-#+BEGIN_SRC emacs-lisp
-  (use-package ox-reveal
-    :ensure ox-reveal)
-  ;; (setq org-reveal-root "https://cdn.jsdelivr.net/reveal.js/3.0.0/")
-  (setq org-reveal-root "https://cdn.jsdelivr.net/npm/reveal.js")
-  (setq org-reveal-mathjax t)
-#+END_SRC
-
-#+RESULTS:
-: t
 
 * Python
 ** Flycheck
@@ -127,15 +132,14 @@
 ** Jedi 
 #+BEGIN_SRC emacs-lisp
   (use-package jedi
-    :ensure t
-    :init
-    (add-hook 'python-mode-hook 'jedi:setup)
-    (add-hook 'python-mode-hook 'jedi:ac-setup)
-    )
+      :ensure t
+      :init
+      (add-hook 'python-mode-hook 'jedi:setup)
+      (add-hook 'python-mode-hook 'jedi:ac-setup)
+      )
 
   (when (memq window-system '(mac ns))
-    (exec-path-from-shell-initialize))
-
+    (exec-path-from-shell-initialize ))
 #+END_SRC
 
 ** Elpy
@@ -147,8 +151,6 @@
 
 
 #+END_SRC
-
-#+RESULTS:
 
 ** Yasnippet
 #+BEGIN_SRC emacs-lisp
@@ -167,8 +169,7 @@
     (global-undo-tree-mode))
 #+END_SRC
 
-#+RESULTS:
-* Misc packages
+* Expand Region
 #+BEGIN_SRC emacs-lisp
   (use-package expand-region
     :ensure t
@@ -179,7 +180,6 @@
     :ensure t)
 #+END_SRC
 
-#+RESULTS:
 * Elfeed
 #+BEGIN_SRC emacs-lisp
   (setq elfeed-db-directory "~/.elfeed/elfeeddb/")
@@ -223,8 +223,6 @@ Ace window is that handy guy that gives you numbers to choose from when moving a
       (global-set-key [remap other-window] 'ace-window)
       ))
 #+END_SRC
-
-#+RESULTS:
 * Custom functions
 Printer for time with timezone
 http://ergoemacs.org/emacs/elisp_datetime.html
@@ -241,12 +239,26 @@ http://ergoemacs.org/emacs/elisp_datetime.html
     )
 #+END_SRC
 * Org mode things
+** General
+Org directory & org log into drawer (:LOGBOOK: drawer)
+#+begin_src emacs-lisp
+  (custom-set-variables
+     '(org-directory "~/Documents/org")
+     '(org-log-into-drawer t)
+   )
+#+end_src
+** todo Keywords
+#+begin_src emacs-lisp
+  (setq org-todo-keywords
+    '((sequence "TODO(t@/!)" "IN-PROGRESS(p@/!)" "BLOCKED(b@/!)" "|" "CANCELLED(c@/!)" "DONE(d@)")))
+
+#+end_src
+
 ** Timestamp
 Below sourced from [[https://emacs.stackexchange.com/a/60590][StackOverflow]]
 #+BEGIN_SRC emacs-lisp
 (setq org-time-stamp-formats '("<%Y-%m-%d %a>" . "<%Y-%m-%d %a %H:%M%z>"))
 #+END_SRC
-
 ** Capture templates
 Following along with Prot for this:
 [[https://www.youtube.com/watch?v=qCdScs4YO8k][Emacs: Introduction to ORG-CAPTURE (YouTube)]]
@@ -261,8 +273,8 @@ Following along with Prot for this:
   (setq org-capture-templates		
         '(("m" "Meeting")
           ("m1" "Meeting to org directory" entry
-           (file+headline "meetings.org" "Meetings")
-           "* %^{Meeting Title:}\nSCHEDULED: %^U\n** Agenda\n** Attendees\n** Minutes\n%?\n** Action Items\n")
+           (file+headline "~/Documents/org/meetings.org" "Meetings")
+           "** %^{Meeting Title:} %U\nSCHEDULED: %^U\n*** Attendees\n*** Minutes\n%?\n*** Action Items\n")
           ("m2" "Meeting to this directory" entry
            (function 
             (lambda ()
@@ -277,9 +289,14 @@ Following along with Prot for this:
         )
 #+END_SRC
 
-#+RESULTS:
-| m  | Meeting                  |       |                                       |                       |
-| m1 | Meeting to org directory | entry | (file+headline meetings.org Meetings) | (* %^{Meeting Title:} |
+** Agenda
+#+begin_src emacs-lisp
+  (global-set-key "\C-ca" 'org-agenda)
+  (custom-set-variables
+   '(org-agenda-files '("~/Documents/org/EngLog.org"))
+   )
+#+end_src
+
 ** Babel & Literate Programming
 Babel
 #+BEGIN_SRC emacs-lisp
@@ -416,6 +433,43 @@ copy/pasty from https://code.orgmode.org/bzg/org-mode/commit/90986a8e2fe881105cc
 
 #+RESULTS:
 : ob-scala
+** Custom Functions (Org Specific)
+#+begin_src emacs-lisp
+  ;;; From Rainer König's Emacs Org-mode course on Udemy
+  (defun my/copy-id-to-clipboard() " Copy the ID property value to killring, if no ID is there then create a new unique Id. This function works only in org-mode buffers.
+
+  The purpose of this function is to easily construct id:-links to org-mode items. If its assigned to a key it saves you marking the text and copying to the killring."
+    (interactive)
+    (when (eq major-mode 'org-mode) ; do this only in org-mode buffers
+      (setq mytmpid (funcall 'org-id-get-create))
+      (kill-new mytmpid)
+      (message "Copied %s to killring (clipboard)" mytmpid)
+      ))
+
+  (global-set-key (kbd "<f5>") 'my/copy-id-to-clipboard)
+#+end_src
+
+#+begin_src emacs-lisp
+  ;;; From Rainer König's Emacs Org-mode course on Udemy (pg 92 in book)
+  (defun my/copy-idlink-to-clipboard() "Copy an ID link with the headline to killring, if no ID is there then createa  new unique ID. This function works only in org-mode or org-agenda buffers.
+
+  The purpose of this function is to easily construct id:-links to org-mode items. If its assigned to a key it saves you marking the text and copying to hte killring."
+
+         (interactive)
+         (when (eq major-mode 'org-agenda-mode)
+           (org-agenda-show)
+           (org-agenda-goto))
+         (when (eq major-mode 'org-mode) ; do this only in org-mode buffers
+           (setq mytmphead (nth 4 (org-heading-components)))
+           (setq mytmpid (funcall 'org-id-get-create))
+           (setq mytmplink (format "[[id:%s][%s]]" mytmpid mytmphead))
+           (kill-new mytmplink)
+           (message "Copied %s to killring (clipboard)" mytmplink)
+           ))
+
+  (global-set-key (kbd "<f6>") 'my/copy-idlink-to-clipboard)
+#+end_src
+
 * Recreate scratch buffer
 #+BEGIN_SRC emacs-lisp
 [[http://www.emacswiki.org/emacs/RecreateScratchBuffer][Recreate Scratch Buffer (emacswiki.org)]]
@@ -427,18 +481,22 @@ copy/pasty from https://code.orgmode.org/bzg/org-mode/commit/90986a8e2fe881105cc
 #+END_SRC
 * Kill ring
 #+BEGIN_SRC emacs-lisp
-(setq save-interprogram-paste-before-kill t)
+  (setq save-interprogram-paste-before-kill t)
 #+END_SRC
 * Evil
 #+BEGIN_SRC emacs-lisp
+  (setq evil-want-C-u-scroll t)
+  (use-package evil)
   (require 'evil)
   (evil-mode 0)
 #+END_SRC
+
 * Easy GPG Ascii
+** COMMENT this will not be tangled
 #+BEGIN_SRC emacs-lisp
   ;; From https://unix.stackexchange.com/a/276430
   ;; Also https://unix.stackexchange.com/questions/55638/can-emacs-use-gpg-agent-in-a-terminal-at-all/278875#278875
-  
+
   ;; Hopefully prompt for GPG key passphrase in minibuffer, not popup
   (setenv "INSIDE_EMACS" (format "%s,comint" emacs-version))
   (pinentry-start)
@@ -459,10 +517,32 @@ copy/pasty from https://code.orgmode.org/bzg/org-mode/commit/90986a8e2fe881105cc
     ;; The minor mode bindings.
     nil
     (if (symbol-value auto-encryption-armored-mode)
-        (set (make-local-variable 'epa-armor) t)
+	(set (make-local-variable 'epa-armor) t)
       (kill-local-variable 'epa-armor))
     )
 
   (add-to-list 'auto-mode-alist '("\\.asc$" . auto-encryption-armored-mode))
 
 #+END_SRC
+* package cl is deprecated
+https://github.com/hlissner/doom-emacs/issues/3372
+#+begin_src emacs-lisp
+  (require 'loadhist)
+  (file-dependents (feature-file 'cl))
+#+end_src
+
+#+RESULTS:
+| /Users/g.clark/.emacs.d/elpa/ace-jump-mode-20140616.815/ace-jump-mode.elc |
+* yaml-mode
+#+begin_src emacs-lisp
+  (require 'yaml-mode)
+  (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
+
+  (add-hook 'yaml-mode-hook
+    '(lambda ()
+       (define-key yaml-mode-map "\C-m" 'newline-and-indent)))
+#+end_src
+
+#+RESULTS:
+| yaml-set-imenu-generic-expression | (lambda nil (define-key yaml-mode-map  'newline-and-indent)) |
+
