@@ -96,6 +96,7 @@
     )
 
 (when (memq window-system '(mac ns))
+  (use-package exec-path-from-shell)
   (exec-path-from-shell-initialize ))
 
 (use-package elpy
@@ -372,8 +373,8 @@ The purpose of this function is to easily construct id:-links to org-mode items.
 
 (setq save-interprogram-paste-before-kill t)
 
-(setq evil-want-C-u-scroll t)
 (use-package evil)
+(setq evil-want-C-u-scroll t)
 (require 'evil)
 (evil-mode 0)
 
