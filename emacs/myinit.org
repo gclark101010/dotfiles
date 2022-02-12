@@ -131,15 +131,17 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
 
 ** Jedi 
 #+BEGIN_SRC emacs-lisp
-  (use-package jedi
-      :ensure t
-      :init
-      (add-hook 'python-mode-hook 'jedi:setup)
-      (add-hook 'python-mode-hook 'jedi:ac-setup)
-      )
+    (use-package jedi
+	:ensure t
+	:init
+	(add-hook 'python-mode-hook 'jedi:setup)
+	(add-hook 'python-mode-hook 'jedi:ac-setup)
+	)
 
-  (when (memq window-system '(mac ns))
-    (exec-path-from-shell-initialize ))
+    (when (memq window-system '(mac ns))
+      (use-package exec-path-from-shell
+	:ensure t)
+      (exec-path-from-shell-initialize ))
 #+END_SRC
 
 ** Elpy
@@ -485,8 +487,8 @@ copy/pasty from https://code.orgmode.org/bzg/org-mode/commit/90986a8e2fe881105cc
 #+END_SRC
 * Evil
 #+BEGIN_SRC emacs-lisp
-  (setq evil-want-C-u-scroll t)
   (use-package evil)
+  (setq evil-want-C-u-scroll t)
   (require 'evil)
   (evil-mode 0)
 #+END_SRC
