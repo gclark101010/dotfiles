@@ -1,6 +1,6 @@
 [user]
     name = Geoffrey Clark
-    email = g.clark@samsung.com
+    email = mr@gffryclrk.com
 [core]
     editor = vim
 [alias]
@@ -15,7 +15,7 @@ b = branch
 r = reset
 lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
 [pager]
-	stash = false
+    stash = false
     branch = false
 [diff]
 	tool = vimdiff
