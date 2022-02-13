@@ -43,4 +43,4 @@ zle -N my-backward-kill-word
 bindkey '^w' my-backward-kill-word
 
 # google-cloud-sdk auto-complete (from homebrew instructions)
-source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
+# source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"

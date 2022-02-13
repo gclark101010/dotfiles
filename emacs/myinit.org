@@ -497,12 +497,14 @@ copy/pasty from https://code.orgmode.org/bzg/org-mode/commit/90986a8e2fe881105cc
 #+RESULTS:
 
 * Easy GPG Ascii
-** COMMENT this will not be tangled
 #+BEGIN_SRC emacs-lisp
   ;; From https://unix.stackexchange.com/a/276430
   ;; Also https://unix.stackexchange.com/questions/55638/can-emacs-use-gpg-agent-in-a-terminal-at-all/278875#278875
 
   ;; Hopefully prompt for GPG key passphrase in minibuffer, not popup
+  (use-package pinentry
+    :ensure t)
+
   (setenv "INSIDE_EMACS" (format "%s,comint" emacs-version))
   (pinentry-start)
 
@@ -522,13 +524,14 @@ copy/pasty from https://code.orgmode.org/bzg/org-mode/commit/90986a8e2fe881105cc
     ;; The minor mode bindings.
     nil
     (if (symbol-value auto-encryption-armored-mode)
-	(set (make-local-variable 'epa-armor) t)
+        (set (make-local-variable 'epa-armor) t)
       (kill-local-variable 'epa-armor))
     )
 
   (add-to-list 'auto-mode-alist '("\\.asc$" . auto-encryption-armored-mode))
 
 #+END_SRC
+
 * package cl is deprecated
 https://github.com/hlissner/doom-emacs/issues/3372
 #+begin_src emacs-lisp

@@ -380,6 +380,38 @@ The purpose of this function is to easily construct id:-links to org-mode items.
 ;;    (require 'evil)
     (evil-mode 1)
 
+;; From https://unix.stackexchange.com/a/276430
+;; Also https://unix.stackexchange.com/questions/55638/can-emacs-use-gpg-agent-in-a-terminal-at-all/278875#278875
+
+;; Hopefully prompt for GPG key passphrase in minibuffer, not popup
+(use-package pinentry
+  :ensure t)
+
+(setenv "INSIDE_EMACS" (format "%s,comint" emacs-version))
+(pinentry-start)
+
+;; Decrypt GPG files in buffer
+(epa-file-enable)
+
+(setq epa-file-name-regexp "\\.\\(gpg\\|\\asc\\)\\(~\\|\\.~[0-9]+~\\)?\\'")
+(epa-file-name-regexp-update)
+
+;; Minor mode for ASCII-armored gpg-encrypted files
+(define-minor-mode auto-encryption-armored-mode
+  "Save files in encrypted, ASCII-armored format"
+  ;; The initial value.
+  nil
+  ;; The indicator for the mode line.
+  " Encrypted,Armored"
+  ;; The minor mode bindings.
+  nil
+  (if (symbol-value auto-encryption-armored-mode)
+      (set (make-local-variable 'epa-armor) t)
+    (kill-local-variable 'epa-armor))
+  )
+
+(add-to-list 'auto-mode-alist '("\\.asc$" . auto-encryption-armored-mode))
+
 (require 'loadhist)
 (file-dependents (feature-file 'cl))
 
