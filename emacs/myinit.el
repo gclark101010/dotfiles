@@ -96,7 +96,8 @@
     )
 
 (when (memq window-system '(mac ns))
-  (use-package exec-path-from-shell)
+  (use-package exec-path-from-shell
+    :ensure t)
   (exec-path-from-shell-initialize ))
 
 (use-package elpy
@@ -373,15 +374,17 @@ The purpose of this function is to easily construct id:-links to org-mode items.
 
 (setq save-interprogram-paste-before-kill t)
 
-(use-package evil)
-(setq evil-want-C-u-scroll t)
-(require 'evil)
-(evil-mode 0)
+(use-package evil
+      :ensure t)
+    (setq evil-want-C-u-scroll t)
+;;    (require 'evil)
+    (evil-mode 1)
 
 (require 'loadhist)
 (file-dependents (feature-file 'cl))
 
-(require 'yaml-mode)
+(use-package yaml-mode
+	 :ensure t)
 (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
 
 (add-hook 'yaml-mode-hook
