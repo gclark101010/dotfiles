@@ -20,15 +20,16 @@ zstyle :compinstall filename '/Users/g.clark/.zshrc'
 autoload -Uz compinit
 compinit
 # End of lines added by compinstall
-# Custom prompt
-source ~/.dotfiles/zsh/.prompt.zsh
-
 # Aliases
 alias ll="ls -lh"
 alias g=git
 alias tf13=/usr/local/opt/terraform@0.13/bin/terraform
 alias tf=terraform
 alias gitk="sed -i .bak 's/zoomed/normal/g' ~/.config/git/gitk && /usr/local/bin/gitk"
+
+# So that M-d jumps back by /levels/in/dir/paths
+autoload -U select-word-style
+select-word-style bash
 
 # Kill word fn from https://unix.stackexchange.com/questions/250690/how-to-configure-ctrlw-as-delete-word-in-zsh
 # Ctrl-w - delete a full WORD (including colon, dot, comma, quotes...)
@@ -44,3 +45,6 @@ bindkey '^w' my-backward-kill-word
 
 # google-cloud-sdk auto-complete (from homebrew instructions)
 # source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
+
+# Custom prompt
+source ~/.dotfiles/zsh/.prompt.zsh

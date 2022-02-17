@@ -4,16 +4,18 @@
 [core]
     editor = vim
 [alias]
-co = checkout
-cp = cherry-pick
-cam = commit -am
-p = pull
-squash = merge --squash
-st = status
-df = diff
-b = branch
-r = reset
-lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+    co = checkout
+    cp = cherry-pick
+    cam = commit -am
+    p = pull
+    squash = merge --squash
+    st = status
+    df = diff
+    b = branch
+    r = reset
+    lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+    d = diff
+    dt = difftool
 [pager]
     stash = false
     branch = false
