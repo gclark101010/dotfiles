@@ -4,7 +4,9 @@ set nu
 set expandtab
 set tabstop=4
 set shiftwidth=4
-set ff=unix
+"set ff=unix
+set cursorcolumn
+" set cursorline
 
 syntax on
 filetype plugin indent on
@@ -27,7 +29,11 @@ call plug#begin('~/.vim/plugged')
         Plug 'preservim/nerdtree'
         Plug 'tpope/vim-abolish'
         Plug 'hashivim/vim-terraform'
-        Plug 'nathanaelkane/vim-indent-guides'
+        Plug 'Yggdroot/indentLine'
         " Initialize plugin system
 call plug#end()
 
+" Indent Line
+let g:indent_guides_enable_on_vim_startup = 1
+let g:indent_guides_tab_guides = 1
+let g:indentLine_char_list = ['|', '¦', '┆', '┊']
