@@ -378,7 +378,7 @@ The purpose of this function is to easily construct id:-links to org-mode items.
       :ensure t)
     (setq evil-want-C-u-scroll t)
 ;;    (require 'evil)
-    (evil-mode 1)
+    (evil-mode 0)
 
 ;; From https://unix.stackexchange.com/a/276430
 ;; Also https://unix.stackexchange.com/questions/55638/can-emacs-use-gpg-agent-in-a-terminal-at-all/278875#278875

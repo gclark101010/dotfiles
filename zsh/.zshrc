@@ -48,3 +48,7 @@ bindkey '^w' my-backward-kill-word
 
 # Custom prompt
 source ~/.dotfiles/zsh/.prompt.zsh
+
+# K8s
+[[ /usr/local/bin/kubectl ]] && source <(kubectl completion zsh)
+alias k=kubectl
