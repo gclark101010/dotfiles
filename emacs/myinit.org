@@ -249,6 +249,13 @@ Org directory & org log into drawer (:LOGBOOK: drawer)
      '(org-log-into-drawer t)
    )
 #+end_src
+
+Time format for clock reports
+#+begin_src emacs-lisp
+;; https://stackoverflow.com/questions/61684949/time-formatting-for-org-clocktable-report
+(setq org-duration-format 'h:mm)
+#+end_src
+
 ** todo Keywords
 #+begin_src emacs-lisp
   (setq org-todo-keywords
