@@ -28,6 +28,7 @@ call plug#begin('~/.vim/plugged')
         Plug 'christoomey/vim-tmux-navigator'
         Plug 'preservim/nerdtree'
         Plug 'tpope/vim-abolish'
+        Plug 'tpope/vim-surround'
         Plug 'hashivim/vim-terraform'
         Plug 'Yggdroot/indentLine'
         " Initialize plugin system
