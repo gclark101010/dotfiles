@@ -483,13 +483,18 @@ JIRA links
   (defun insert-jira-url ()
     "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
     (interactive)
-    (setq url (current-kill 0))
-    (setq jira-ticket (car (last (split-string "https://path/to/domain/JIRA-1234" "/"))))
-    (setq jiralink (format "[[%s][%s]]" url jira-ticket))
-    (insert jiralink))
+    (let (
+              (url (current-kill 0))
+              (jira-ticket (car (last (split-string url "/"))))
+              (jira-link (format "[[%s][%s]]" url jira-ticket))
+          )
+      (insert jiralink)
+      )
+    )
 
   (global-set-key (kbd "C-x p j") 'insert-jira-url)
 #+end_src
+
 * Recreate scratch buffer
 #+BEGIN_SRC emacs-lisp
 [[http://www.emacswiki.org/emacs/RecreateScratchBuffer][Recreate Scratch Buffer (emacswiki.org)]]
