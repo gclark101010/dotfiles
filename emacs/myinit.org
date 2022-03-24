@@ -483,12 +483,12 @@ JIRA links
   (defun insert-jira-url ()
     "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
     (interactive)
-    (let (
+    (let* (
               (url (current-kill 0))
               (jira-ticket (car (last (split-string url "/"))))
               (jira-link (format "[[%s][%s]]" url jira-ticket))
           )
-      (insert jiralink)
+      (insert jira-link)
       )
     )
 
