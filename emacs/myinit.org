@@ -161,6 +161,7 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
     :init
     (yas-global-mode 1))
 
+  (setq yas-snippet-dirs (append yas-snippet-dirs '("/Users/g.clark/.dotfiles/emacs/yasnippet/extras/imported")))
 #+END_SRC
 
 * Undo Tree
@@ -509,15 +510,23 @@ JIRA links
   (setq save-interprogram-paste-before-kill t)
 #+END_SRC
 * Evil
+Evil mode
 #+BEGIN_SRC emacs-lisp
-    (use-package evil
-      :ensure t)
+  (use-package evil
+    :ensure t
+    :init
     (setq evil-want-C-u-scroll t)
-;;    (require 'evil)
     (evil-mode 1)
+    )
 #+END_SRC
 
-#+RESULTS:
+Evil Surround
+#+begin_src emacs-lisp
+(use-package evil-surround
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
+#+end_src
 
 * Easy GPG Ascii
 #+BEGIN_SRC emacs-lisp
