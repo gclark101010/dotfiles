@@ -41,10 +41,12 @@
     (global-display-line-numbers-mode))
 #+END_SRC
 
+Visual line mode to for line wrap
+#+begin_src emacs-lisp
+(global-visual-line-mode t)
+#+end_src
 * Which key
 Issues with which-key with Emacs 27.2 running on macOS Catalina
-** TODO Debug this later
-** COMMENT This will not be tangled
 #+BEGIN_SRC emacs-lisp
   ;;  (add-to-list 'load-path "/Users/g.clark/.dotfiles/emacs/which-key.el")
 
@@ -53,6 +55,7 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
       :config (which-key-mode))
 
 #+END_SRC
+
 * The rest
 #+BEGIN_SRC emacs-lisp
 
@@ -163,7 +166,6 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
 
   (setq yas-snippet-dirs (append yas-snippet-dirs '("/Users/g.clark/.dotfiles/emacs/yasnippet/extras/imported")))
 #+END_SRC
-
 * Undo Tree
 #+BEGIN_SRC emacs-lisp
   (use-package undo-tree
@@ -241,6 +243,18 @@ http://ergoemacs.org/emacs/elisp_datetime.html
       )
     )
 #+END_SRC
+Filename of buffer. This should be built in.
+Source: [[https://stackoverflow.com/questions/3669511/the-function-to-show-current-files-full-path-in-mini-buffer][emacs - The function to show current file's full path in mini buffer - Stack ...]]
+#+begin_src emacs-lisp
+  (defun show-file-name ()
+    "Show the full path file name in the minibuffer."
+    (interactive)
+    (message (buffer-file-name))
+    (kill-new (file-truename buffer-file-name))
+  )
+  (global-set-key (kbd "C-c g") 'show-file-name)
+#+end_src
+
 * Org mode things
 ** General
 Org directory & org log into drawer (:LOGBOOK: drawer)
@@ -257,6 +271,10 @@ Time format for clock reports
 (setq org-duration-format 'h:mm)
 #+end_src
 
+This will hide heading bullets and format org mode buffers a bit easier to read by indenting (or "tabbing") the content over by a specified amount per heading.
+#+begin_src emacs-lisp
+  (add-hook 'org-mode-hook 'org-indent-mode)
+#+end_src
 ** todo Keywords
 #+begin_src emacs-lisp
   (setq org-todo-keywords
@@ -495,6 +513,12 @@ JIRA links
 
   (global-set-key (kbd "C-x p j") 'insert-jira-url)
 #+end_src
+** Flyspell
+#+begin_src emacs-lisp
+  (use-package flyspell
+    :ensure t)
+  (add-hook 'org-mode-hook 'turn-on-flyspell)
+#+end_src
 
 * Recreate scratch buffer
 #+BEGIN_SRC emacs-lisp
@@ -567,8 +591,8 @@ Evil Surround
 * package cl is deprecated
 https://github.com/hlissner/doom-emacs/issues/3372
 #+begin_src emacs-lisp
-  (require 'loadhist)
-  (file-dependents (feature-file 'cl))
+;;(require 'loadhist)
+;;(file-dependents (feature-file 'cl))
 #+end_src
 
 #+RESULTS:
