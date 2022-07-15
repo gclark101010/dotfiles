@@ -166,6 +166,19 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
 
   (setq yas-snippet-dirs (append yas-snippet-dirs '("/Users/g.clark/.dotfiles/emacs/yasnippet/extras/imported")))
 #+END_SRC
+** Compile
+[[https://stackoverflow.com/questions/9037833/how-to-set-the-default-directory-of-compilation-in-emacs][How to set the default-directory of compilation in Emacs? - Stack Overflow]]
+Doesn't work :(
+#+begin_src emacs-lisp
+  (defun compile-in-parent-directory ()
+    (interactive)
+    (let ((default-directory
+            (if (string= (file-name-extension buffer-file-name) "py")
+                (concat default-directory "..")
+              default-directory))))
+    (call-interactively #'compile))
+#+end_src
+
 * Undo Tree
 #+BEGIN_SRC emacs-lisp
   (use-package undo-tree
@@ -275,6 +288,11 @@ This will hide heading bullets and format org mode buffers a bit easier to read 
 #+begin_src emacs-lisp
   (add-hook 'org-mode-hook 'org-indent-mode)
 #+end_src
+
+Display inline images in a less large way
+#+begin_src emacs-lisp
+(setq org-image-actual-width '(300))
+#+end_src
 ** todo Keywords
 #+begin_src emacs-lisp
   (setq org-todo-keywords
@@ -313,9 +331,12 @@ Following along with Prot for this:
             )
            "* %^{Meeting Title:}\nSCHEDULED: %^U\n** Agenda\n** Attendees\n** Minutes\n%?\n** Action Items\n"
            )
+          ("i" "Image" entry
+           (function org-end-of-subtree)
+           "* img\n#+NAME: fig: %^{Name:} \n#+CAPTION: %^{Caption:}\n#attr_html: :width %^{width|1000}px\n[[%^{path|./img/}]]")
           )
         )
-#+END_SRC
+            #+END_SRC
 
 ** Agenda
 #+begin_src emacs-lisp
@@ -597,7 +618,8 @@ https://github.com/hlissner/doom-emacs/issues/3372
 
 #+RESULTS:
 | /Users/g.clark/.emacs.d/elpa/ace-jump-mode-20140616.815/ace-jump-mode.elc |
-* yaml-mode
+* yaml-mode & json-mode
+Yaml
 #+begin_src emacs-lisp
     (use-package yaml-mode
 	     :ensure t)
@@ -607,3 +629,11 @@ https://github.com/hlissner/doom-emacs/issues/3372
       '(lambda ()
 	 (define-key yaml-mode-map "\C-m" 'newline-and-indent)))
 #+end_src
+
+Json
+#+begin_src emacs-lisp
+  (use-package json-mode
+    :ensure t)
+#+end_src
+
+
