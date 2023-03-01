@@ -308,7 +308,8 @@ Below sourced from [[https://emacs.stackexchange.com/a/60590][StackOverflow]]
 ** Capture templates
 Following along with Prot for this:
 [[https://www.youtube.com/watch?v=qCdScs4YO8k][Emacs: Introduction to ORG-CAPTURE (YouTube)]]
-#+BEGIN_SRC emacs-lisp  ;; I want capture org files to be in same directory as buffer from which template was called
+#+BEGIN_SRC emacs-lisp
+  ;; I want capture org files to be in same directory as buffer from which template was called
   ;;(setq org-default-notes-file (concat default-directory "meetings.org"))
 
   ;; set keybindg C-c c
@@ -319,7 +320,7 @@ Following along with Prot for this:
   (setq org-capture-templates		
         '(("m" "Meeting")
           ("m1" "Meeting to org directory" entry
-           (file+headline "~/Documents/org/meetings.org" "Meetings")
+           (file+headline "~/Documents/org/meetings2023.org" "Meetings")
            "** %^{Meeting Title:} %U\nSCHEDULED: %^U\n*** Attendees\n*** Minutes\n%?\n*** Action Items\n")
           ("m2" "Meeting to this directory" entry
            (function 
@@ -333,10 +334,11 @@ Following along with Prot for this:
            )
           ("i" "Image" entry
            (function org-end-of-subtree)
-           "* img\n#+NAME: fig: %^{Name:} \n#+CAPTION: %^{Caption:}\n#attr_html: :width %^{width|1000}px\n[[%^{path|./img/}]]")
+           "* img\n  #+NAME: fig: %^{Name:} \n  #+CAPTION: %^{Caption:}\n  #+attr_html: :width 1000px\n  [[./img/%^{path|./img/}.png]]")
           )
         )
-            #+END_SRC
+#+END_SRC
+
 
 ** Agenda
 #+begin_src emacs-lisp
@@ -349,15 +351,16 @@ Following along with Prot for this:
 ** Babel & Literate Programming
 Babel
 #+BEGIN_SRC emacs-lisp
-  (use-package scala-mode
-    :interpreter
-    ("scala" . scala-mode))
+    (use-package scala-mode
+      :interpreter
+      ("scala" . scala-mode))
 
-;; active Babel languages
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((R . t)
-   (python . t)))
+  ;; active Babel languages
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((R . t)
+     (python . t)
+     (awk . t)))
 #+END_SRC
 
 missing ob-scala.el
@@ -534,6 +537,23 @@ JIRA links
 
   (global-set-key (kbd "C-x p j") 'insert-jira-url)
 #+end_src
+PR Links
+#+begin_src emacs-lisp
+  (defun insert-pr-url ()
+    "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
+    (interactive)
+    (let* (
+              (url (current-kill 0))
+              (pr-ticket (car (last (split-string url "/"))))
+              (pr-link (format "[[%s][PR#%s]]" url pr-ticket))
+          )
+      (insert pr-link)
+      )
+    )
+
+  (global-set-key (kbd "C-x p p") 'insert-pr-url)
+#+end_src
+
 ** Flyspell
 #+begin_src emacs-lisp
   (use-package flyspell
