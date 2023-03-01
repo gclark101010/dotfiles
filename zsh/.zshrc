@@ -23,9 +23,10 @@ compinit
 # Aliases
 alias ll="ls -lh"
 alias g=git
-alias tf13=/usr/local/opt/terraform@0.13/bin/terraform
 alias tf=terraform
 alias gitk="sed -i .bak 's/zoomed/normal/g' ~/.config/git/gitk && /usr/local/bin/gitk"
+alias h1="history 1"
+alias hrg='history 1 | rg'
 
 # So that M-d jumps back by /levels/in/dir/paths
 autoload -U select-word-style
@@ -52,3 +53,8 @@ source ~/.dotfiles/zsh/.prompt.zsh
 # K8s
 [[ /usr/local/bin/kubectl ]] && source <(kubectl completion zsh)
 alias k=kubectl
+
+# Pyenv
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
