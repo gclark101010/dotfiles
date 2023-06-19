@@ -21,3 +21,12 @@
     branch = false
 [diff]
 	tool = vimdiff
+[difftool]
+    prompt = true
+[commit]
+    template = ~/.gitmessage
+[merge]
+    tool = vimdiff
+    conflictstyle = diff3
+    prompt = false
+

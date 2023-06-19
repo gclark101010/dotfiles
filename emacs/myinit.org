@@ -1,10 +1,10 @@
 #+STARTIP: overview
-* Package Repositories
+* Package Repositories & Source Code
 #+BEGIN_SRC emacs-lisp
   (require 'package)
   (setq package-enable-at-startup nil)
   (add-to-list 'package-archives
-               '("melpa" . "https://melpa.org/packages/"))
+               '("mepa" . "https://melpa.org/packages/"))
 
   (package-initialize)
 
@@ -12,6 +12,11 @@
     (package-refresh-contents)
     (package-install 'use-package))
 #+END_SRC
+
+#+begin_src emacs-lisp
+  (let ((default-directory  "~/.emacs.d/lisp/"))
+    (normal-top-level-add-subdirs-to-load-path))
+#+end_src
 
 * Theme
 #+BEGIN_SRC emacs-lisp
@@ -339,7 +344,6 @@ Following along with Prot for this:
         )
 #+END_SRC
 
-
 ** Agenda
 #+begin_src emacs-lisp
   (global-set-key "\C-ca" 'org-agenda)
@@ -349,19 +353,6 @@ Following along with Prot for this:
 #+end_src
 
 ** Babel & Literate Programming
-Babel
-#+BEGIN_SRC emacs-lisp
-    (use-package scala-mode
-      :interpreter
-      ("scala" . scala-mode))
-
-  ;; active Babel languages
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((R . t)
-     (python . t)
-     (awk . t)))
-#+END_SRC
 
 missing ob-scala.el
 copy/pasty from https://code.orgmode.org/bzg/org-mode/commit/90986a8e2fe881105cc6d869a7592581520646d2
@@ -483,8 +474,29 @@ copy/pasty from https://code.orgmode.org/bzg/org-mode/commit/90986a8e2fe881105cc
 
 #+END_SRC
 
-#+RESULTS:
-: ob-scala
+Babel
+#+BEGIN_SRC emacs-lisp
+  ;;    (use-package scala-mode
+        ;; :interpreter
+        ;; ("scala" . scala-mode))
+
+  ;; I can't get Scala mode to work... :(
+  (use-package scala-mode
+    :mode "\\.s\\(cala\\|bt\\)$"
+    :ensure t
+    :config
+      (load-file "~/.emacs.d/lisp/ob-scala.el"))
+
+
+;; active Babel languages
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((R . t)
+   (python . t)
+;; (scala . t)
+   (awk . t)))
+#+END_SRC
+
 ** Custom Functions (Org Specific)
 #+begin_src emacs-lisp
   ;;; From Rainer König's Emacs Org-mode course on Udemy
@@ -638,7 +650,7 @@ https://github.com/hlissner/doom-emacs/issues/3372
 
 #+RESULTS:
 | /Users/g.clark/.emacs.d/elpa/ace-jump-mode-20140616.815/ace-jump-mode.elc |
-* yaml-mode & json-mode
+* yaml, json & CSV modes
 Yaml
 #+begin_src emacs-lisp
     (use-package yaml-mode
@@ -656,4 +668,17 @@ Json
     :ensure t)
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package csv-mode
+    :ensure t)
+#+end_src
+* UUIDs
+From [[https://www.ianoxley.com/blog/2015/03/27/inserting-a-guid-in-emacs][Inserting a UUID in Emacs | Ian Oxley]]
+#+begin_src emacs-lisp
+  (defun uuid-insert()
+    (interactive)
+    (require 'uuid)
+    (insert (upcase (uuid-string))))
 
+  (global-set-key (kbd "C-c C-'") 'uuid-insert)
+#+end_src

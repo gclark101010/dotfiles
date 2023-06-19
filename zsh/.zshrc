@@ -23,6 +23,7 @@ compinit
 # Aliases
 alias ll="ls -lh"
 alias g=git
+alias gst="git status"
 alias tf=terraform
 alias gitk="sed -i .bak 's/zoomed/normal/g' ~/.config/git/gitk && /usr/local/bin/gitk"
 alias h1="history 1"
@@ -43,6 +44,8 @@ my-backward-kill-word () {
 }
 zle -N my-backward-kill-word
 bindkey '^w' my-backward-kill-word
+#bindkey "\C-S-k" vi-kill-eol
+bindkey '^[k' kill-line
 
 # google-cloud-sdk auto-complete (from homebrew instructions)
 # source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
