@@ -1,6 +1,6 @@
 colors zenburn
 
-set nu
+set number relativenumber
 set expandtab
 set tabstop=4
 set shiftwidth=4
@@ -20,6 +20,7 @@ nnoremap <C-H> <C-W><C-H>
 
 :nnoremap <Tab> :bnext<CR>
 :nnoremap <S-Tab> :bprevious<CR>
+:nnoremap <F2> gg"*yG''
 
 set backspace=indent " I don't like not being able to backspace
 
@@ -31,6 +32,9 @@ call plug#begin('~/.vim/plugged')
         Plug 'tpope/vim-surround'
         Plug 'hashivim/vim-terraform'
         Plug 'Yggdroot/indentLine'
+        Plug 'Vimjas/vim-python-pep8-indent'
+        Plug 'chrisbra/csv.vim'
+        Plug 'tmhedberg/SimpylFold'
         " Initialize plugin system
 call plug#end()
 

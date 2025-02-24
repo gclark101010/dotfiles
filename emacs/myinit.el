@@ -1,13 +1,16 @@
 (require 'package)
 (setq package-enable-at-startup nil)
 (add-to-list 'package-archives
-             '("melpa" . "https://melpa.org/packages/"))
+             '("mepa" . "https://melpa.org/packages/"))
 
 (package-initialize)
 
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
+
+(let ((default-directory  "~/.emacs.d/lisp/"))
+  (normal-top-level-add-subdirs-to-load-path))
 
 (use-package zenburn-theme
   :ensure t
@@ -28,6 +31,14 @@
   ;; Line numbers? Yes plz
 (when (version<= "26.0.50" emacs-version )
   (global-display-line-numbers-mode))
+
+(global-visual-line-mode t)
+
+;;  (add-to-list 'load-path "/Users/g.clark/.dotfiles/emacs/which-key.el")
+
+  (use-package which-key
+    :ensure t
+    :config (which-key-mode))
 
 (setq ido-enable-flex-matching t)
 (setq ido-everywhere t)
@@ -110,10 +121,33 @@
   :init
   (yas-global-mode 1))
 
+(add-hook 'yas-minor-mode-hook (lambda ()
+                                 (yas-activate-extra-mode 'fundamental-mode)))
+
+(define-key yas-minor-mode-map (kbd "C-c y") #'yas-expand)
+
+(setq yas-snippet-dirs (append yas-snippet-dirs '("/Users/g.clark/.dotfiles/emacs/yasnippet/extras/imported")))
+
+(defun compile-in-parent-directory ()
+  (interactive)
+  (let ((default-directory
+          (if (string= (file-name-extension buffer-file-name) "py")
+              (concat default-directory "..")
+            default-directory))))
+  (call-interactively #'compile))
+
 (use-package undo-tree
-  :ensure t
-  :init
-  (global-undo-tree-mode))
+        :ensure t
+        :init
+        (global-undo-tree-mode))
+
+
+;; Clear Undo Tree which loads slow when large
+;; https://stackoverflow.com/a/12734980
+(defun clear-undo-tree ()
+  (interactive)
+  (setq buffer-undo-tree nil))
+(global-set-key [(control c) u] 'clear-undo-tree)
 
 (use-package expand-region
   :ensure t
@@ -168,16 +202,37 @@
     )
   )
 
+(defun show-file-name ()
+  "Show the full path file name in the minibuffer."
+  (interactive)
+  (message (buffer-file-name))
+  (kill-new (file-truename buffer-file-name))
+)
+(global-set-key (kbd "C-c g") 'show-file-name)
+
+(defun unix-ms-to-ts (ts)
+  (interactive)
+  (format-time-string "<%Y-%m-%d %a %H:%M:%S>" (seconds-to-time (/ ts 1000)))
+  )
+
 (custom-set-variables
    '(org-directory "~/Documents/org")
    '(org-log-into-drawer t)
  )
+
+;; https://stackoverflow.com/questions/61684949/time-formatting-for-org-clocktable-report
+(setq org-duration-format 'h:mm)
+
+(add-hook 'org-mode-hook 'org-indent-mode)
+
+(setq org-image-actual-width '(300))
 
 (setq org-todo-keywords
   '((sequence "TODO(t@/!)" "IN-PROGRESS(p@/!)" "BLOCKED(b@/!)" "|" "CANCELLED(c@/!)" "DONE(d@)")))
 
 (setq org-time-stamp-formats '("<%Y-%m-%d %a>" . "<%Y-%m-%d %a %H:%M%z>"))
 
+;; I want capture org files to be in same directory as buffer from which template was called
 ;;(setq org-default-notes-file (concat default-directory "meetings.org"))
 
 ;; set keybindg C-c c
@@ -188,7 +243,7 @@
 (setq org-capture-templates		
       '(("m" "Meeting")
         ("m1" "Meeting to org directory" entry
-         (file+headline "~/Documents/org/meetings.org" "Meetings")
+         (file+headline "~/Documents/org/meetings2024.org" "Meetings")
          "** %^{Meeting Title:} %U\nSCHEDULED: %^U\n*** Attendees\n*** Minutes\n%?\n*** Action Items\n")
         ("m2" "Meeting to this directory" entry
          (function 
@@ -200,6 +255,9 @@
           )
          "* %^{Meeting Title:}\nSCHEDULED: %^U\n** Agenda\n** Attendees\n** Minutes\n%?\n** Action Items\n"
          )
+        ("i" "Image" entry
+         (function org-end-of-subtree)
+         "* img\n  #+NAME: fig: %^{Name:} \n  #+CAPTION: %^{Caption:}\n  #+attr_html: :width 1000px\n  [[./img/%^{path|./img/}.png]]")
         )
       )
 
@@ -207,16 +265,6 @@
 (custom-set-variables
  '(org-agenda-files '("~/Documents/org/EngLog.org"))
  )
-
-(use-package scala-mode
-    :interpreter
-    ("scala" . scala-mode))
-
-;; active Babel languages
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((R . t)
-   (python . t)))
 
 ;;; ob-scala.el --- Babel Functions for Scala        -*- lexical-binding: t; -*-
 
@@ -333,6 +381,26 @@ supported in Scala."
 
 ;;; ob-scala.el ends here
 
+;;    (use-package scala-mode
+        ;; :interpreter
+        ;; ("scala" . scala-mode))
+
+  ;; I can't get Scala mode to work... :(
+  (use-package scala-mode
+    :mode "\\.s\\(cala\\|bt\\)$"
+    :ensure t
+    :config
+      (load-file "~/.emacs.d/lisp/ob-scala.el"))
+
+
+;; active Babel languages
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((R . t)
+   (python . t)
+;; (scala . t)
+   (awk . t)))
+
 ;;; From Rainer König's Emacs Org-mode course on Udemy
 (defun my/copy-id-to-clipboard() " Copy the ID property value to killring, if no ID is there then create a new unique Id. This function works only in org-mode buffers.
 
@@ -365,6 +433,66 @@ The purpose of this function is to easily construct id:-links to org-mode items.
 
 (global-set-key (kbd "<f6>") 'my/copy-idlink-to-clipboard)
 
+(defun insert-jira-url ()
+  "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
+  (interactive)
+  (let* (
+            (url (current-kill 0))
+            (jira-ticket (car (last (split-string url "/"))))
+            (jira-link (format "[[%s][%s]]" url jira-ticket))
+        )
+    (insert jira-link)
+    )
+  )
+
+(global-set-key (kbd "C-x p j") 'insert-jira-url)
+
+(defun insert-pr-url ()
+  "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
+  (interactive)
+  (let* (
+            (url (current-kill 0))
+            (pr-ticket (car (last (split-string url "/"))))
+            (pr-link (format "[[%s][PR#%s]]" url pr-ticket))
+        )
+    (insert pr-link)
+    )
+  )
+
+(global-set-key (kbd "C-x p p") 'insert-pr-url)
+
+(defun insert-pr-url ()
+  "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
+  (interactive)
+  (let* (
+            (url (current-kill 0))
+            (pr-ticket-list (split-string url "/"))
+            (pr-link (format "[[%s][%s PR#%s]]" url (nth 4 pr-ticket-list) (nth 6 pr-ticket-list)))
+        )
+    (insert pr-link)
+    )
+  )
+
+(global-set-key (kbd "C-x p p") 'insert-pr-url)
+
+(defun insert-slack-url ()
+  "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
+  (interactive)
+  (let* (
+            (url (current-kill 0))
+            (slack-ticket (car (last (split-string url "/"))))
+            (slack-link (format "[[%s][Slack]]" url slack-ticket))
+        )
+    (insert slack-link)
+    )
+  )
+
+(global-set-key (kbd "C-x p s") 'insert-slack-url)
+
+(use-package flyspell
+  :ensure t)
+(add-hook 'org-mode-hook 'turn-on-flyspell)
+
 [[http://www.emacswiki.org/emacs/RecreateScratchBuffer][Recreate Scratch Buffer (emacswiki.org)]]
 (defun create-scratch-buffer nil
    "create a scratch buffer"
@@ -375,10 +503,16 @@ The purpose of this function is to easily construct id:-links to org-mode items.
 (setq save-interprogram-paste-before-kill t)
 
 (use-package evil
-      :ensure t)
-    (setq evil-want-C-u-scroll t)
-;;    (require 'evil)
-    (evil-mode 0)
+  :ensure t
+  :init
+  (setq evil-want-C-u-scroll t)
+  (evil-mode 1)
+  )
+
+(use-package evil-surround
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
 
 ;; From https://unix.stackexchange.com/a/276430
 ;; Also https://unix.stackexchange.com/questions/55638/can-emacs-use-gpg-agent-in-a-terminal-at-all/278875#278875
@@ -412,8 +546,8 @@ The purpose of this function is to easily construct id:-links to org-mode items.
 
 (add-to-list 'auto-mode-alist '("\\.asc$" . auto-encryption-armored-mode))
 
-(require 'loadhist)
-(file-dependents (feature-file 'cl))
+;;(require 'loadhist)
+;;(file-dependents (feature-file 'cl))
 
 (use-package yaml-mode
 	 :ensure t)
@@ -422,3 +556,110 @@ The purpose of this function is to easily construct id:-links to org-mode items.
 (add-hook 'yaml-mode-hook
   '(lambda ()
      (define-key yaml-mode-map "\C-m" 'newline-and-indent)))
+
+(use-package json-mode
+  :ensure t)
+
+(use-package csv-mode
+  :ensure t)
+
+(defun uuid-insert()
+  (interactive)
+  (require 'uuid)
+  (insert (upcase (uuid-string))))
+
+(global-set-key (kbd "C-c C-'") 'uuid-insert)
+
+;; (require 'package)
+
+;; ;; Add melpa to your packages repositories
+;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+
+;; (package-initialize)
+
+;; ;; Install use-package if not already installed
+;; (unless (package-installed-p 'use-package)
+;;   (package-refresh-contents)
+;;   (package-install 'use-package))
+
+;; (require 'use-package)
+
+;; Enable defer and ensure by default for use-package
+;; Keep auto-save/backup files separate from source code:  https://github.com/scalameta/metals/issues/1027
+(setq use-package-always-defer t
+      use-package-always-ensure t
+      backup-directory-alist `((".*" . ,temporary-file-directory))
+      auto-save-file-name-transforms `((".*" ,temporary-file-directory t)))
+
+;; Enable scala-mode for highlighting, indentation and motion commands
+(use-package scala-mode
+  :interpreter ("scala" . scala-mode))
+
+;; Enable sbt mode for executing sbt commands
+(use-package sbt-mode
+  :commands sbt-start sbt-command
+  :config
+  ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+  ;; allows using SPACE when in the minibuffer
+  (substitute-key-definition
+   'minibuffer-complete-word
+   'self-insert-command
+   minibuffer-local-completion-map)
+   ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+   (setq sbt:program-options '("-Dsbt.supershell=false")))
+
+;; Enable nice rendering of diagnostics like compile errors.
+(use-package flycheck
+  :init (global-flycheck-mode))
+
+(use-package lsp-mode
+  ;; Optional - enable lsp-mode automatically in scala files
+  ;; You could also swap out lsp for lsp-deffered in order to defer loading
+  :hook  (scala-mode . lsp)
+         (lsp-mode . lsp-lens-mode)
+  :config
+  ;; Uncomment following section if you would like to tune lsp-mode performance according to
+  ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
+  ;; (setq gc-cons-threshold 100000000) ;; 100mb
+  ;; (setq read-process-output-max (* 1024 1024)) ;; 1mb
+  ;; (setq lsp-idle-delay 0.500)
+  ;; (setq lsp-log-io nil)
+  ;; (setq lsp-completion-provider :capf)
+  (setq lsp-prefer-flymake nil)
+  ;; Makes LSP shutdown the metals server when all buffers in the project are closed.
+  ;; https://emacs-lsp.github.io/lsp-mode/page/settings/mode/#lsp-keep-workspace-alive
+  (setq lsp-keep-workspace-alive nil))
+
+;; Add metals backend for lsp-mode
+(use-package lsp-metals)
+
+;; Enable nice rendering of documentation on hover
+;;   Warning: on some systems this package can reduce your emacs responsiveness significally.
+;;   (See: https://emacs-lsp.github.io/lsp-mode/page/performance/)
+;;   In that case you have to not only disable this but also remove from the packages since
+;;   lsp-mode can activate it automatically.
+(use-package lsp-ui)
+
+;; lsp-mode supports snippets, but in order for them to work you need to use yasnippet
+;; If you don't want to use snippets set lsp-enable-snippet to nil in your lsp-mode settings
+;; to avoid odd behavior with snippets and indentation
+(use-package yasnippet)
+
+;; Use company-capf as a completion provider.
+;;
+;; To Company-lsp users:
+;;   Company-lsp is no longer maintained and has been removed from MELPA.
+;;   Please migrate to company-capf.
+(use-package company
+  :hook (scala-mode . company-mode)
+  :config
+  (setq lsp-completion-provider :capf))
+
+;; Posframe is a pop-up tool that must be manually installed for dap-mode
+(use-package posframe)
+
+;; Use the Debug Adapter Protocol for running tests and debugging
+(use-package dap-mode
+  :hook
+  (lsp-mode . dap-mode)
+  (lsp-mode . dap-ui-mode))

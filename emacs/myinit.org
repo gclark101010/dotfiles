@@ -1,10 +1,10 @@
 #+STARTIP: overview
-* Package Repositories
+* Package Repositories & Source Code
 #+BEGIN_SRC emacs-lisp
   (require 'package)
   (setq package-enable-at-startup nil)
   (add-to-list 'package-archives
-               '("melpa" . "https://melpa.org/packages/"))
+               '("mepa" . "https://melpa.org/packages/"))
 
   (package-initialize)
 
@@ -12,6 +12,11 @@
     (package-refresh-contents)
     (package-install 'use-package))
 #+END_SRC
+
+#+begin_src emacs-lisp
+  (let ((default-directory  "~/.emacs.d/lisp/"))
+    (normal-top-level-add-subdirs-to-load-path))
+#+end_src
 
 * Theme
 #+BEGIN_SRC emacs-lisp
@@ -164,14 +169,41 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
     :init
     (yas-global-mode 1))
 
+  (add-hook 'yas-minor-mode-hook (lambda ()
+                                   (yas-activate-extra-mode 'fundamental-mode)))
+
+  (define-key yas-minor-mode-map (kbd "C-c y") #'yas-expand)
+
   (setq yas-snippet-dirs (append yas-snippet-dirs '("/Users/g.clark/.dotfiles/emacs/yasnippet/extras/imported")))
 #+END_SRC
+
+** Compile
+[[https://stackoverflow.com/questions/9037833/how-to-set-the-default-directory-of-compilation-in-emacs][How to set the default-directory of compilation in Emacs? - Stack Overflow]]
+Doesn't work :(
+#+begin_src emacs-lisp
+  (defun compile-in-parent-directory ()
+    (interactive)
+    (let ((default-directory
+            (if (string= (file-name-extension buffer-file-name) "py")
+                (concat default-directory "..")
+              default-directory))))
+    (call-interactively #'compile))
+#+end_src
+
 * Undo Tree
 #+BEGIN_SRC emacs-lisp
   (use-package undo-tree
-    :ensure t
-    :init
-    (global-undo-tree-mode))
+          :ensure t
+          :init
+          (global-undo-tree-mode))
+
+
+  ;; Clear Undo Tree which loads slow when large
+  ;; https://stackoverflow.com/a/12734980
+  (defun clear-undo-tree ()
+    (interactive)
+    (setq buffer-undo-tree nil))
+  (global-set-key [(control c) u] 'clear-undo-tree)
 #+END_SRC
 
 * Expand Region
@@ -255,6 +287,14 @@ Source: [[https://stackoverflow.com/questions/3669511/the-function-to-show-curre
   (global-set-key (kbd "C-c g") 'show-file-name)
 #+end_src
 
+Convert unix ms to readable timestamp. [[https://emacs.stackexchange.com/a/40986][SO post]]
+#+begin_src emacs-lisp
+  (defun unix-ms-to-ts (ts)
+    (interactive)
+    (format-time-string "<%Y-%m-%d %a %H:%M:%S>" (seconds-to-time (/ ts 1000)))
+    )
+#+end_src
+
 * Org mode things
 ** General
 Org directory & org log into drawer (:LOGBOOK: drawer)
@@ -275,6 +315,11 @@ This will hide heading bullets and format org mode buffers a bit easier to read 
 #+begin_src emacs-lisp
   (add-hook 'org-mode-hook 'org-indent-mode)
 #+end_src
+
+Display inline images in a less large way
+#+begin_src emacs-lisp
+(setq org-image-actual-width '(300))
+#+end_src
 ** todo Keywords
 #+begin_src emacs-lisp
   (setq org-todo-keywords
@@ -290,7 +335,8 @@ Below sourced from [[https://emacs.stackexchange.com/a/60590][StackOverflow]]
 ** Capture templates
 Following along with Prot for this:
 [[https://www.youtube.com/watch?v=qCdScs4YO8k][Emacs: Introduction to ORG-CAPTURE (YouTube)]]
-#+BEGIN_SRC emacs-lisp  ;; I want capture org files to be in same directory as buffer from which template was called
+#+BEGIN_SRC emacs-lisp
+  ;; I want capture org files to be in same directory as buffer from which template was called
   ;;(setq org-default-notes-file (concat default-directory "meetings.org"))
 
   ;; set keybindg C-c c
@@ -301,7 +347,7 @@ Following along with Prot for this:
   (setq org-capture-templates		
         '(("m" "Meeting")
           ("m1" "Meeting to org directory" entry
-           (file+headline "~/Documents/org/meetings.org" "Meetings")
+           (file+headline "~/Documents/org/meetings2024.org" "Meetings")
            "** %^{Meeting Title:} %U\nSCHEDULED: %^U\n*** Attendees\n*** Minutes\n%?\n*** Action Items\n")
           ("m2" "Meeting to this directory" entry
            (function 
@@ -313,6 +359,9 @@ Following along with Prot for this:
             )
            "* %^{Meeting Title:}\nSCHEDULED: %^U\n** Agenda\n** Attendees\n** Minutes\n%?\n** Action Items\n"
            )
+          ("i" "Image" entry
+           (function org-end-of-subtree)
+           "* img\n  #+NAME: fig: %^{Name:} \n  #+CAPTION: %^{Caption:}\n  #+attr_html: :width 1000px\n  [[./img/%^{path|./img/}.png]]")
           )
         )
 #+END_SRC
@@ -326,18 +375,6 @@ Following along with Prot for this:
 #+end_src
 
 ** Babel & Literate Programming
-Babel
-#+BEGIN_SRC emacs-lisp
-  (use-package scala-mode
-    :interpreter
-    ("scala" . scala-mode))
-
-;; active Babel languages
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((R . t)
-   (python . t)))
-#+END_SRC
 
 missing ob-scala.el
 copy/pasty from https://code.orgmode.org/bzg/org-mode/commit/90986a8e2fe881105cc6d869a7592581520646d2
@@ -459,8 +496,29 @@ copy/pasty from https://code.orgmode.org/bzg/org-mode/commit/90986a8e2fe881105cc
 
 #+END_SRC
 
-#+RESULTS:
-: ob-scala
+Babel
+#+BEGIN_SRC emacs-lisp
+  ;;    (use-package scala-mode
+        ;; :interpreter
+        ;; ("scala" . scala-mode))
+
+  ;; I can't get Scala mode to work... :(
+  (use-package scala-mode
+    :mode "\\.s\\(cala\\|bt\\)$"
+    :ensure t
+    :config
+      (load-file "~/.emacs.d/lisp/ob-scala.el"))
+
+
+;; active Babel languages
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((R . t)
+   (python . t)
+;; (scala . t)
+   (awk . t)))
+#+END_SRC
+
 ** Custom Functions (Org Specific)
 #+begin_src emacs-lisp
   ;;; From Rainer König's Emacs Org-mode course on Udemy
@@ -513,6 +571,59 @@ JIRA links
 
   (global-set-key (kbd "C-x p j") 'insert-jira-url)
 #+end_src
+PR Links
+#+begin_src emacs-lisp
+  (defun insert-pr-url ()
+    "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
+    (interactive)
+    (let* (
+              (url (current-kill 0))
+              (pr-ticket (car (last (split-string url "/"))))
+              (pr-link (format "[[%s][PR#%s]]" url pr-ticket))
+          )
+      (insert pr-link)
+      )
+    )
+
+  (global-set-key (kbd "C-x p p") 'insert-pr-url)
+#+end_src
+
+#+begin_src emacs-lisp
+  (defun insert-pr-url ()
+    "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
+    (interactive)
+    (let* (
+              (url (current-kill 0))
+              (pr-ticket-list (split-string url "/"))
+              (pr-link (format "[[%s][%s PR#%s]]" url (nth 4 pr-ticket-list) (nth 6 pr-ticket-list)))
+          )
+      (insert pr-link)
+      )
+    )
+
+  (global-set-key (kbd "C-x p p") 'insert-pr-url)
+#+end_src
+
+#+RESULTS:
+: insert-pr-url
+
+Slack
+#+begin_src emacs-lisp
+  (defun insert-slack-url ()
+    "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
+    (interactive)
+    (let* (
+              (url (current-kill 0))
+              (slack-ticket (car (last (split-string url "/"))))
+              (slack-link (format "[[%s][Slack]]" url slack-ticket))
+          )
+      (insert slack-link)
+      )
+    )
+
+  (global-set-key (kbd "C-x p s") 'insert-slack-url)
+#+end_src
+
 ** Flyspell
 #+begin_src emacs-lisp
   (use-package flyspell
@@ -597,7 +708,8 @@ https://github.com/hlissner/doom-emacs/issues/3372
 
 #+RESULTS:
 | /Users/g.clark/.emacs.d/elpa/ace-jump-mode-20140616.815/ace-jump-mode.elc |
-* yaml-mode
+* yaml, json & CSV modes
+Yaml
 #+begin_src emacs-lisp
     (use-package yaml-mode
 	     :ensure t)
@@ -607,3 +719,206 @@ https://github.com/hlissner/doom-emacs/issues/3372
       '(lambda ()
 	 (define-key yaml-mode-map "\C-m" 'newline-and-indent)))
 #+end_src
+
+Json
+#+begin_src emacs-lisp
+  (use-package json-mode
+    :ensure t)
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package csv-mode
+    :ensure t)
+#+end_src
+* UUIDs
+From [[https://www.ianoxley.com/blog/2015/03/27/inserting-a-guid-in-emacs][Inserting a UUID in Emacs | Ian Oxley]]
+#+begin_src emacs-lisp
+  (defun uuid-insert()
+    (interactive)
+    (require 'uuid)
+    (insert (upcase (uuid-string))))
+
+  (global-set-key (kbd "C-c C-'") 'uuid-insert)
+#+end_src
+* COMMENT Pass Generator
+- Comment means this block isn't run. Issue with =defun*=
+source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password Generator]]
+
+#+begin_src emacs-lisp
+  (defun* make-password (length &optional (upper t) (lower t) (number t) (symbol nil) (ambiguous nil))
+    "Return a string of LENGTH random characters.  If UPPER is non-nil,
+  use uppercase letters.  If lower is non-nil, use lowercase letters.
+  If NUMBER is non-nil, use numbers.  If SYMBOL is non-nil, use one of
+  \"!\"#$%&'()*+'-./:;<=>?@`{}|~\".  If AMBIGUOUS is nil, avoid
+  characters like \"l\" and \"1\", \"O\" and \"0\"."
+    (interactive (make-password-prompt-for-args))
+    (let ((char-list (make-password-char-list upper lower number symbol ambiguous))
+           position password)
+      (random t)
+    (loop for i from 1 to length 
+          do (setq position (random (length char-list))
+                   password (concat password (string (nth position char-list)))))
+    (if (interactive-p)
+        (let* ((strength (make-password-strength length upper lower number symbol ambiguous))
+               (bits (car strength))
+               (number (cadr strength)))
+          (message "The password \"%s\" is one of 10^%d possible and has a bit equivalence of %d" 
+                   password (round number) (round bits)))
+      password)))
+
+  (defun make-password-char-list (upper lower number symbol ambiguous)
+    (let* ((upper-chars-ambiguous '(?I ?O ?G))
+           (upper-chars (loop for i from ?A to ?Z unless 
+                              (member i upper-chars-ambiguous)
+                              collect i))
+           (lower-chars-ambiguous '(?l ?o))
+           (lower-chars (loop for i from ?a to ?z unless 
+                              (member i lower-chars-ambiguous)
+                              collect i))
+           (number-chars-ambiguous '(?0 ?1 ?6))
+           (number-chars (loop for i from ?0 to ?9 unless
+                               (member i number-chars-ambiguous)
+                               collect i))
+           (symbol-chars '(?! ?@ ?# ?$ ?% ?& ?* ?( ?) ?+ ?= ?/ 
+                              ?{ ?} ?[ ?] ?: ?\; ?< ?>))
+           (symbol-chars-ambiguous '(?_ ?- ?| ?, ?. ?` ?' ?~ ?^ ?\"))
+           char-list)
+    (if upper
+        (setq char-list (append char-list upper-chars)))
+    (if lower
+        (setq char-list (append char-list lower-chars)))
+    (if number
+        (setq char-list (append char-list number-chars)))
+    (if symbol
+        (setq char-list (append char-list symbol-chars)))
+    (if ambiguous
+        (setq char-list (append char-list
+                                upper-chars-ambiguous 
+                                lower-chars-ambiguous
+                                number-chars-ambiguous
+                                symbol-chars-ambiguous)))
+    char-list))
+
+  (defun make-password-prompt-for-args ()
+    (interactive)
+    (list
+     (string-to-number (read-from-minibuffer "Number of Characters: "))
+     (y-or-n-p "User uppercase: ")
+     (y-or-n-p "User lowercase: ")
+     (y-or-n-p "User numbers: ")
+     (y-or-n-p "User symbols: ")
+     (y-or-n-p "User ambiguous characters: ")))
+
+  (defun* make-password-strength (length &optional (upper t) (lower t) (number t) (symbol nil) (ambiguous nil))
+    "Calculate the number of possible passwords that could be generated
+  given the criteria of LENGTH and use of UPPER, LOWER, NUMBER, SYMBOL,
+  and AMBIGUOUS characters"
+    (interactive (make-password-prompt-for-args))
+    (let* ((char-list (make-password-char-list upper lower number symbol ambiguous))
+           (bits (/ (* length (log (length char-list))) (log 2)))
+           (number (/ (* bits (log 2)) (log 10))))
+      (if (interactive-p)
+          (message "number of combinations is 10^%d with a bit equivalence of %d" (round number) (round bits))
+        (list bits number))))
+#+end_src
+
+#+RESULTS:
+: make-password-strength
+
+* Scala
+#+begin_src emacs-lisp
+  ;; (require 'package)
+
+  ;; ;; Add melpa to your packages repositories
+  ;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+
+  ;; (package-initialize)
+
+  ;; ;; Install use-package if not already installed
+  ;; (unless (package-installed-p 'use-package)
+  ;;   (package-refresh-contents)
+  ;;   (package-install 'use-package))
+
+  ;; (require 'use-package)
+
+  ;; Enable defer and ensure by default for use-package
+  ;; Keep auto-save/backup files separate from source code:  https://github.com/scalameta/metals/issues/1027
+  (setq use-package-always-defer t
+        use-package-always-ensure t
+        backup-directory-alist `((".*" . ,temporary-file-directory))
+        auto-save-file-name-transforms `((".*" ,temporary-file-directory t)))
+
+  ;; Enable scala-mode for highlighting, indentation and motion commands
+  (use-package scala-mode
+    :interpreter ("scala" . scala-mode))
+
+  ;; Enable sbt mode for executing sbt commands
+  (use-package sbt-mode
+    :commands sbt-start sbt-command
+    :config
+    ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+    ;; allows using SPACE when in the minibuffer
+    (substitute-key-definition
+     'minibuffer-complete-word
+     'self-insert-command
+     minibuffer-local-completion-map)
+     ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+     (setq sbt:program-options '("-Dsbt.supershell=false")))
+
+  ;; Enable nice rendering of diagnostics like compile errors.
+  (use-package flycheck
+    :init (global-flycheck-mode))
+
+  (use-package lsp-mode
+    ;; Optional - enable lsp-mode automatically in scala files
+    ;; You could also swap out lsp for lsp-deffered in order to defer loading
+    :hook  (scala-mode . lsp)
+           (lsp-mode . lsp-lens-mode)
+    :config
+    ;; Uncomment following section if you would like to tune lsp-mode performance according to
+    ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
+    ;; (setq gc-cons-threshold 100000000) ;; 100mb
+    ;; (setq read-process-output-max (* 1024 1024)) ;; 1mb
+    ;; (setq lsp-idle-delay 0.500)
+    ;; (setq lsp-log-io nil)
+    ;; (setq lsp-completion-provider :capf)
+    (setq lsp-prefer-flymake nil)
+    ;; Makes LSP shutdown the metals server when all buffers in the project are closed.
+    ;; https://emacs-lsp.github.io/lsp-mode/page/settings/mode/#lsp-keep-workspace-alive
+    (setq lsp-keep-workspace-alive nil))
+
+  ;; Add metals backend for lsp-mode
+  (use-package lsp-metals)
+
+  ;; Enable nice rendering of documentation on hover
+  ;;   Warning: on some systems this package can reduce your emacs responsiveness significally.
+  ;;   (See: https://emacs-lsp.github.io/lsp-mode/page/performance/)
+  ;;   In that case you have to not only disable this but also remove from the packages since
+  ;;   lsp-mode can activate it automatically.
+  (use-package lsp-ui)
+
+  ;; lsp-mode supports snippets, but in order for them to work you need to use yasnippet
+  ;; If you don't want to use snippets set lsp-enable-snippet to nil in your lsp-mode settings
+  ;; to avoid odd behavior with snippets and indentation
+  (use-package yasnippet)
+
+  ;; Use company-capf as a completion provider.
+  ;;
+  ;; To Company-lsp users:
+  ;;   Company-lsp is no longer maintained and has been removed from MELPA.
+  ;;   Please migrate to company-capf.
+  (use-package company
+    :hook (scala-mode . company-mode)
+    :config
+    (setq lsp-completion-provider :capf))
+
+  ;; Posframe is a pop-up tool that must be manually installed for dap-mode
+  (use-package posframe)
+
+  ;; Use the Debug Adapter Protocol for running tests and debugging
+  (use-package dap-mode
+    :hook
+    (lsp-mode . dap-mode)
+    (lsp-mode . dap-ui-mode))
+#+end_src
+
