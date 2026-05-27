@@ -35,7 +35,12 @@
  '(org-log-into-drawer t)
  '(org-startup-folded 'content)
  '(package-selected-packages
-   '(dap-mode posframe lsp-ui lsp-metals lsp-mode sbt-mode csv-mode json-mode which-key column-marker evil-surround yaml-mode org-ac org-cliplink pinentry scala-mode ace-window counsel-projectile projectile elpy elfeed-goodies elfeed-org elfeed iedit expand-region evil yasnippet-snippets yasnippet exec-path-from-shell jedi flycheck htmlize ox-reveal zenburn-theme auto-complete counsel swiper try use-package)))
+   '(counsel-projectile csv-mode elfeed-goodies elfeed-org elpy
+			evil-surround exec-path-from-shell
+			expand-region flycheck iedit jedi jinx
+			json-mode lsp-metals lsp-ui org-cliplink
+			pinentry poetry sbt-mode undo-tree yaml-mode
+			zenburn-theme)))
  
 
 (custom-set-faces

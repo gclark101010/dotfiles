@@ -100,15 +100,15 @@
 (setq python-shell-completion-native-enable nil)
 
 (use-package jedi
-    :ensure t
-    :init
-    (add-hook 'python-mode-hook 'jedi:setup)
-    (add-hook 'python-mode-hook 'jedi:ac-setup)
-    )
+	:ensure t
+	:init
+	(add-hook 'python-mode-hook 'jedi:setup)
+	(add-hook 'python-mode-hook 'jedi:ac-setup)
+	)
 
 (when (memq window-system '(mac ns))
   (use-package exec-path-from-shell
-    :ensure t)
+	:ensure t)
   (exec-path-from-shell-initialize ))
 
 (use-package elpy
@@ -135,6 +135,9 @@
               (concat default-directory "..")
             default-directory))))
   (call-interactively #'compile))
+
+(use-package poetry
+:ensure t)
 
 (use-package undo-tree
         :ensure t
@@ -243,7 +246,7 @@
 (setq org-capture-templates		
       '(("m" "Meeting")
         ("m1" "Meeting to org directory" entry
-         (file+headline "~/Documents/org/meetings2024.org" "Meetings")
+         (file+headline "~/Documents/org/meetings2026.org" "Meetings")
          "** %^{Meeting Title:} %U\nSCHEDULED: %^U\n*** Attendees\n*** Minutes\n%?\n*** Action Items\n")
         ("m2" "Meeting to this directory" entry
          (function 
@@ -489,6 +492,21 @@ The purpose of this function is to easily construct id:-links to org-mode items.
 
 (global-set-key (kbd "C-x p s") 'insert-slack-url)
 
+(defun insert-confluence-url ()
+  "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
+  (interactive)
+  (let* (
+            (url (current-kill 0))
+            (confluence-page-name
+              (s-replace "+" " " (car (last (split-string url "/")))))
+            (confluence-link (format "[[%s][%s]]" url confluence-page-name))
+        )
+    (insert confluence-link)
+    )
+  )
+
+(global-set-key (kbd "C-x p t") 'insert-confluence-url)
+
 (use-package flyspell
   :ensure t)
 (add-hook 'org-mode-hook 'turn-on-flyspell)
@@ -513,6 +531,9 @@ The purpose of this function is to easily construct id:-links to org-mode items.
   :ensure t
   :config
   (global-evil-surround-mode 1))
+
+(setq evil-want-C-i-jump nil)
+(evil-define-key 'normal org-mode-map (kbd "<tab>") #'org-cycle)
 
 ;; From https://unix.stackexchange.com/a/276430
 ;; Also https://unix.stackexchange.com/questions/55638/can-emacs-use-gpg-agent-in-a-terminal-at-all/278875#278875
@@ -550,12 +571,12 @@ The purpose of this function is to easily construct id:-links to org-mode items.
 ;;(file-dependents (feature-file 'cl))
 
 (use-package yaml-mode
-	 :ensure t)
+	     :ensure t)
 (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
 
 (add-hook 'yaml-mode-hook
   '(lambda ()
-     (define-key yaml-mode-map "\C-m" 'newline-and-indent)))
+	 (define-key yaml-mode-map "\C-m" 'newline-and-indent)))
 
 (use-package json-mode
   :ensure t)
@@ -663,3 +684,10 @@ The purpose of this function is to easily construct id:-links to org-mode items.
   :hook
   (lsp-mode . dap-mode)
   (lsp-mode . dap-ui-mode))
+
+(use-package markdown-mode
+  :ensure t
+  :mode ("README\\.md\\'" . gfm-mode)
+  :init (setq markdown-command "multimarkdown")
+  :bind (:map markdown-mode-map
+         ("C-c C-e" . markdown-do)))
