@@ -1,4 +1,4 @@
-# Useful history options: 
+# Useful history options:
 # - https://www.soberkoder.com/better-zsh-history/
 # - https://jdhao.github.io/2021/03/24/zsh_history_setup/
 HISTFILE=~/.histfile
@@ -7,7 +7,7 @@ SAVEHIST=1000000000
 HISTFILESIZE=100000000000
 
 setopt INC_APPEND_HISTORY_TIME  # append command to history file immediately after execution
-setopt EXTENDED_HISTORY 
+setopt EXTENDED_HISTORY
 setopt HIST_FIND_NO_DUPS
 export HISTTIMEFORMAT="[%F %T] "
 
@@ -20,14 +20,18 @@ zstyle :compinstall filename '/Users/g.clark/.zshrc'
 autoload -Uz compinit
 compinit
 # End of lines added by compinstall
+# ISO Format Date
+export TIME_STYLE=long-iso
 # Aliases
-alias ll="ls -lh"
+alias ll="gls -lh" # Use coreutils ls to respect `TIME_STYLE`
 alias g=git
 alias gst="git status"
 alias tf=terraform
 alias gitk="sed -i .bak 's/zoomed/normal/g' ~/.config/git/gitk && /usr/local/bin/gitk"
 alias h1="history 1"
 alias hrg='history 1 | rg'
+
+mkcd() { mkdir -p -- "$1" && cd -P -- "$1"; }
 
 # So that M-d jumps back by /levels/in/dir/paths
 autoload -U select-word-style
@@ -61,7 +65,7 @@ alias k=kubectl
 export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
-eval "$(jenv init -)"
+# eval "$(jenv init -)"
 
 # Rancher Desktop
 # $HOME/.rd/bin # From install ? Weird command
@@ -69,3 +73,14 @@ path+=('/Users/g.clark/.rd/bin')
 
 # export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:/Users/g.clark/Library/Application Support/Coursier/bin:$PATH"
 
+# Auto Complete Passwordstore ?
+if type brew &>/dev/null; then
+	  FPATH=$(brew --prefix)/share/zsh-completions:$(brew --prefix)/share/zsh/site-functions:$FPATH
+
+    autoload -Uz compinit
+    compinit
+  fi
+
+### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
+export PATH="/Users/gclark/.rd/bin:$PATH"
+### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
