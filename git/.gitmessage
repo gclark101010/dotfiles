@@ -1,0 +1,12 @@
+# Title: Summary, imperative, start upper case, don't end with a period
+# No more than 72 chars.
+########################################################################
+
+# Remember blank line between title and body.
+
+# Body: Explain *what* and *why* (not *how*). Include task ID (Jira issue).
+# Wrap at 72 chars.
+
+# At the end: Include Co-authored-by for all contributors.
+# Include at least one empty line before it. Format:
+# Co-authored-by: name <email>
