@@ -598,12 +598,11 @@ From [[https://www.ianoxley.com/blog/2015/03/27/inserting-a-guid-in-emacs][Inser
 
   (global-set-key (kbd "C-c C-'") 'uuid-insert)
 #+end_src
-* COMMENT Pass Generator
-- Comment means this block isn't run. Issue with =defun*=
+* Pass Generator
 source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password Generator]]
 
 #+begin_src emacs-lisp
-  (defun* make-password (length &optional (upper t) (lower t) (number t) (symbol nil) (ambiguous nil))
+  (cl-defun make-password (length &optional (upper t) (lower t) (number t) (symbol nil) (ambiguous nil))
     "Return a string of LENGTH random characters.  If UPPER is non-nil,
   use uppercase letters.  If lower is non-nil, use lowercase letters.
   If NUMBER is non-nil, use numbers.  If SYMBOL is non-nil, use one of
@@ -613,31 +612,31 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
     (let ((char-list (make-password-char-list upper lower number symbol ambiguous))
            position password)
       (random t)
-    (loop for i from 1 to length 
+    (cl-loop for i from 1 to length
           do (setq position (random (length char-list))
                    password (concat password (string (nth position char-list)))))
-    (if (interactive-p)
+    (if (called-interactively-p 'any)
         (let* ((strength (make-password-strength length upper lower number symbol ambiguous))
                (bits (car strength))
                (number (cadr strength)))
-          (message "The password \"%s\" is one of 10^%d possible and has a bit equivalence of %d" 
+          (message "The password \"%s\" is one of 10^%d possible and has a bit equivalence of %d"
                    password (round number) (round bits)))
       password)))
 
   (defun make-password-char-list (upper lower number symbol ambiguous)
     (let* ((upper-chars-ambiguous '(?I ?O ?G))
-           (upper-chars (loop for i from ?A to ?Z unless 
+           (upper-chars (cl-loop for i from ?A to ?Z unless
                               (member i upper-chars-ambiguous)
                               collect i))
            (lower-chars-ambiguous '(?l ?o))
-           (lower-chars (loop for i from ?a to ?z unless 
+           (lower-chars (cl-loop for i from ?a to ?z unless
                               (member i lower-chars-ambiguous)
                               collect i))
            (number-chars-ambiguous '(?0 ?1 ?6))
-           (number-chars (loop for i from ?0 to ?9 unless
+           (number-chars (cl-loop for i from ?0 to ?9 unless
                                (member i number-chars-ambiguous)
                                collect i))
-           (symbol-chars '(?! ?@ ?# ?$ ?% ?& ?* ?( ?) ?+ ?= ?/ 
+           (symbol-chars '(?! ?@ ?# ?$ ?% ?& ?* ?( ?) ?+ ?= ?/
                               ?{ ?} ?[ ?] ?: ?\; ?< ?>))
            (symbol-chars-ambiguous '(?_ ?- ?| ?, ?. ?` ?' ?~ ?^ ?\"))
            char-list)
@@ -651,7 +650,7 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
         (setq char-list (append char-list symbol-chars)))
     (if ambiguous
         (setq char-list (append char-list
-                                upper-chars-ambiguous 
+                                upper-chars-ambiguous
                                 lower-chars-ambiguous
                                 number-chars-ambiguous
                                 symbol-chars-ambiguous)))
@@ -667,7 +666,7 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
      (y-or-n-p "User symbols: ")
      (y-or-n-p "User ambiguous characters: ")))
 
-  (defun* make-password-strength (length &optional (upper t) (lower t) (number t) (symbol nil) (ambiguous nil))
+  (cl-defun make-password-strength (length &optional (upper t) (lower t) (number t) (symbol nil) (ambiguous nil))
     "Calculate the number of possible passwords that could be generated
   given the criteria of LENGTH and use of UPPER, LOWER, NUMBER, SYMBOL,
   and AMBIGUOUS characters"
@@ -675,31 +674,13 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
     (let* ((char-list (make-password-char-list upper lower number symbol ambiguous))
            (bits (/ (* length (log (length char-list))) (log 2)))
            (number (/ (* bits (log 2)) (log 10))))
-      (if (interactive-p)
+      (if (called-interactively-p 'any)
           (message "number of combinations is 10^%d with a bit equivalence of %d" (round number) (round bits))
         (list bits number))))
 #+end_src
 
-#+RESULTS:
-: make-password-strength
-
 * Scala
 #+begin_src emacs-lisp
-  ;; (require 'package)
-
-  ;; ;; Add melpa to your packages repositories
-  ;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-
-  ;; (package-initialize)
-
-  ;; ;; Install use-package if not already installed
-  ;; (unless (package-installed-p 'use-package)
-  ;;   (package-refresh-contents)
-  ;;   (package-install 'use-package))
-
-  ;; (require 'use-package)
-
-  ;; Enable defer and ensure by default for use-package
   ;; Keep auto-save/backup files separate from source code:  https://github.com/scalameta/metals/issues/1027
   (setq use-package-always-defer t
         use-package-always-ensure t
@@ -740,18 +721,8 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
   ;; Add metals backend for lsp-mode
   (use-package lsp-metals)
 
-  ;; Enable nice rendering of documentation on hover
-  ;;   Warning: on some systems this package can reduce your emacs responsiveness significally.
-  ;;   (See: https://emacs-lsp.github.io/lsp-mode/page/performance/)
-  ;;   In that case you have to not only disable this but also remove from the packages since
-  ;;   lsp-mode can activate it automatically.
   (use-package lsp-ui)
 
-  ;; Use company-capf as a completion provider.
-  ;;
-  ;; To Company-lsp users:
-  ;;   Company-lsp is no longer maintained and has been removed from MELPA.
-  ;;   Please migrate to company-capf.
   (use-package company
     :hook (scala-mode . company-mode)
     :config
