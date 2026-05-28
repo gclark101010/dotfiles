@@ -592,22 +592,6 @@ PR Links
   (global-set-key (kbd "C-x p p") 'insert-pr-url)
 #+end_src
 
-#+begin_src emacs-lisp
-  (defun insert-pr-url ()
-    "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
-    (interactive)
-    (let* (
-              (url (current-kill 0))
-              (pr-ticket-list (split-string url "/"))
-              (pr-link (format "[[%s][%s PR#%s]]" url (nth 4 pr-ticket-list) (nth 6 pr-ticket-list)))
-          )
-      (insert pr-link)
-      )
-    )
-
-  (global-set-key (kbd "C-x p p") 'insert-pr-url)
-#+end_src
-
 Slack
 #+begin_src emacs-lisp
   (defun insert-slack-url ()
@@ -625,6 +609,23 @@ Slack
   (global-set-key (kbd "C-x p s") 'insert-slack-url)
 #+end_src
 
+Teams
+#+begin_src emacs-lisp
+  (defun insert-teams-url ()
+    "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
+    (interactive)
+    (let* (
+              (url (current-kill 0))
+              (teams-ticket (car (last (split-string url "/"))))
+              (teams-link (format "[[%s][Teams]]" url teams-ticket))
+          )
+      (insert teams-link)
+      )
+    )
+
+  (global-set-key (kbd "C-x p t") 'insert-teams-url)
+#+end_src
+
 Confluence Pages w/ Name in URL
 #+begin_src emacs-lisp
   (defun insert-confluence-url ()
@@ -640,7 +641,7 @@ Confluence Pages w/ Name in URL
       )
     )
 
-  (global-set-key (kbd "C-x p t") 'insert-confluence-url)
+  (global-set-key (kbd "C-x p c") 'insert-confluence-url)
 #+end_src
 
 ** Flyspell
