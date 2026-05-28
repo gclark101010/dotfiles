@@ -1,4 +1,4 @@
-#+STARTIP: overview
+#+STARTUP: overview
 * Package Repositories & Source Code
 #+BEGIN_SRC emacs-lisp
   (require 'package)
@@ -23,8 +23,6 @@
 (use-package zenburn-theme
   :ensure t
   :config (load-theme 'zenburn t))
-
-;; (load-theme 'tsdh-dark t)
 #+END_SRC
 * Cliplink
 #+begin_src emacs-lisp
@@ -51,14 +49,10 @@ Visual line mode to for line wrap
 (global-visual-line-mode t)
 #+end_src
 * Which key
-Issues with which-key with Emacs 27.2 running on macOS Catalina
 #+BEGIN_SRC emacs-lisp
-  ;;  (add-to-list 'load-path "/Users/g.clark/.dotfiles/emacs/which-key.el")
-
-    (use-package which-key
-      :ensure t
-      :config (which-key-mode))
-
+  (use-package which-key
+    :ensure t
+    :config (which-key-mode))
 #+END_SRC
 
 * The rest
@@ -100,16 +94,10 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
       (ac-config-default)
       (global-auto-complete-mode t)
       ))
-
-  ;; (use-package org-ac
-  ;;   :ensure t
-  ;;   :init
-  ;;   )
 #+end_src
 
 * Projectile
 #+BEGIN_SRC emacs-lisp
-  ;; projectile
   (use-package projectile
   :ensure t
   :config
@@ -129,7 +117,7 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
   (use-package flycheck
     :ensure t
     :init (global-flycheck-mode t)
-    :custom (flyckeck-disabled-checkers '(org-lint)))
+    :custom (flycheck-disabled-checkers '(org-lint)))
 
   ;; Below fixes a weird python shell problem
   ;; https://github.com/syl20bnr/spacemacs/issues/8797
@@ -174,19 +162,6 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
 
   (setq yas-snippet-dirs (append yas-snippet-dirs '("/Users/g.clark/.dotfiles/emacs/yasnippet/extras/imported")))
 #+END_SRC
-
-** Compile
-[[https://stackoverflow.com/questions/9037833/how-to-set-the-default-directory-of-compilation-in-emacs][How to set the default-directory of compilation in Emacs? - Stack Overflow]]
-Doesn't work :(
-#+begin_src emacs-lisp
-  (defun compile-in-parent-directory ()
-    (interactive)
-    (let ((default-directory
-            (if (string= (file-name-extension buffer-file-name) "py")
-                (concat default-directory "..")
-              default-directory))))
-    (call-interactively #'compile))
-#+end_src
 
 ** Poetry
 #+begin_src emacs-lisp
@@ -252,8 +227,6 @@ Doesn't work :(
 
 #+END_SRC
 
-#+RESULTS:
-: t
 * Ace-Window
 Ace window is that handy guy that gives you numbers to choose from when moving about windows
 #+BEGIN_SRC emacs-lisp
@@ -340,9 +313,6 @@ Below sourced from [[https://emacs.stackexchange.com/a/60590][StackOverflow]]
 Following along with Prot for this:
 [[https://www.youtube.com/watch?v=qCdScs4YO8k][Emacs: Introduction to ORG-CAPTURE (YouTube)]]
 #+BEGIN_SRC emacs-lisp
-  ;; I want capture org files to be in same directory as buffer from which template was called
-  ;;(setq org-default-notes-file (concat default-directory "meetings.org"))
-
   ;; set keybindg C-c c
   (global-set-key (kbd "C-c c") 'org-capture)
 
@@ -358,8 +328,7 @@ Following along with Prot for this:
             (lambda ()
               (find-file
                (concat (file-name-directory (or (org-capture-get :original-file t) (org-capture-get :original-file))) "meetings.org"))
-              ;; (end-of-buffer)
-              ) 
+              )
             )
            "* %^{Meeting Title:}\nSCHEDULED: %^U\n** Agenda\n** Attendees\n** Minutes\n%?\n** Action Items\n"
            )
@@ -379,147 +348,19 @@ Following along with Prot for this:
 #+end_src
 
 ** Babel & Literate Programming
-
-missing ob-scala.el
-copy/pasty from https://code.orgmode.org/bzg/org-mode/commit/90986a8e2fe881105cc6d869a7592581520646d2
 #+BEGIN_SRC emacs-lisp
-  ;;; ob-scala.el --- Babel Functions for Scala        -*- lexical-binding: t; -*-
-
-  ;; Copyright (C) 2012-2017 Free Software Foundation, Inc.
-
-  ;; Author: Andrzej Lichnerowicz
-  ;; Keywords: literate programming, reproducible research
-  ;; Homepage: http://orgmode.org
-
-  ;; This file is part of GNU Emacs.
-
-  ;; GNU Emacs is free software: you can redistribute it and/or modify
-  ;; it under the terms of the GNU General Public License as published by
-  ;; the Free Software Foundation, either version 3 of the License, or
-  ;; (at your option) any later version.
-
-  ;; GNU Emacs is distributed in the hope that it will be useful,
-  ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  ;; GNU General Public License for more details.
-
-  ;; You should have received a copy of the GNU General Public License
-  ;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
-
-  ;;; Commentary:
-  ;; Currently only supports the external execution.  No session support yet.
-
-  ;;; Requirements:
-  ;; - Scala language :: http://www.scala-lang.org/
-  ;; - Scala major mode :: Can be installed from Scala sources
-  ;;  https://github.com/scala/scala-dist/blob/master/tool-support/src/emacs/scala-mode.el
-
-  ;;; Code:
-  (require 'ob)
-
-  (defvar org-babel-tangle-lang-exts) ;; Autoloaded
-  (add-to-list 'org-babel-tangle-lang-exts '("scala" . "scala"))
-  (defvar org-babel-default-header-args:scala '())
-  (defvar org-babel-scala-command "scala"
-    "Name of the command to use for executing Scala code.")
-
-  (defun org-babel-execute:scala (body params)
-    "Execute a block of Scala code with org-babel.  This function is
-  called by `org-babel-execute-src-block'"
-    (message "executing Scala source code block")
-    (let* ((processed-params (org-babel-process-params params))
-           (session (org-babel-scala-initiate-session (nth 0 processed-params)))
-           (result-params (nth 2 processed-params))
-           (result-type (cdr (assq :result-type params)))
-           (full-body (org-babel-expand-body:generic
-                       body params))
-           (result (org-babel-scala-evaluate
-                    session full-body result-type result-params)))
-
-      (org-babel-reassemble-table
-       result
-       (org-babel-pick-name
-        (cdr (assq :colname-names params)) (cdr (assq :colnames params)))
-       (org-babel-pick-name
-        (cdr (assq :rowname-names params)) (cdr (assq :rownames params))))))
-
-  (defvar org-babel-scala-wrapper-method
-
-  "var str_result :String = null;
-
-  Console.withOut(new java.io.OutputStream() {def write(b: Int){
-  }}) {
-    str_result = {
-  %s
-    }.toString
-  }
-
-  print(str_result)
-  ")
-
-
-  (defun org-babel-scala-evaluate
-      (session body &optional result-type result-params)
-    "Evaluate BODY in external Scala process.
-  If RESULT-TYPE equals `output' then return standard output as a string.
-  If RESULT-TYPE equals `value' then return the value of the last statement
-  in BODY as elisp."
-    (when session (error "Sessions are not (yet) supported for Scala"))
-    (pcase result-type
-      (`output
-       (let ((src-file (org-babel-temp-file "scala-")))
-         (with-temp-file src-file (insert body))
-         (org-babel-eval
-          (concat org-babel-scala-command " " src-file) "")))
-      (`value
-       (let* ((src-file (org-babel-temp-file "scala-"))
-              (wrapper (format org-babel-scala-wrapper-method body)))
-         (with-temp-file src-file (insert wrapper))
-         (let ((raw (org-babel-eval
-                     (concat org-babel-scala-command " " src-file) "")))
-           (org-babel-result-cond result-params
-             raw
-             (org-babel-script-escape raw)))))))
-
-
-  (defun org-babel-prep-session:scala (_session _params)
-    "Prepare SESSION according to the header arguments specified in PARAMS."
-    (error "Sessions are not (yet) supported for Scala"))
-
-  (defun org-babel-scala-initiate-session (&optional _session)
-    "If there is not a current inferior-process-buffer in SESSION
-  then create.  Return the initialized session.  Sessions are not
-  supported in Scala."
-    nil)
-
-  (provide 'ob-scala)
-
-
-
-  ;;; ob-scala.el ends here
-
-#+END_SRC
-
-Babel
-#+BEGIN_SRC emacs-lisp
-  ;;    (use-package scala-mode
-        ;; :interpreter
-        ;; ("scala" . scala-mode))
-
-  ;; I can't get Scala mode to work... :(
   (use-package scala-mode
     :mode "\\.s\\(cala\\|bt\\)$"
+    :interpreter ("scala" . scala-mode)
     :ensure t
     :config
       (load-file "~/.emacs.d/lisp/ob-scala.el"))
 
 
-;; active Babel languages
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((R . t)
    (python . t)
-;; (scala . t)
    (awk . t)))
 #+END_SRC
 
@@ -652,8 +493,8 @@ Confluence Pages w/ Name in URL
 #+end_src
 
 * Recreate scratch buffer
-#+BEGIN_SRC emacs-lisp
 [[http://www.emacswiki.org/emacs/RecreateScratchBuffer][Recreate Scratch Buffer (emacswiki.org)]]
+#+BEGIN_SRC emacs-lisp
 (defun create-scratch-buffer nil
    "create a scratch buffer"
    (interactive)
@@ -725,15 +566,6 @@ Org Cycle (expand tabs): [[https://emacs.stackexchange.com/a/73457][Stack Overfl
 
 #+END_SRC
 
-* package cl is deprecated
-https://github.com/hlissner/doom-emacs/issues/3372
-#+begin_src emacs-lisp
-;;(require 'loadhist)
-;;(file-dependents (feature-file 'cl))
-#+end_src
-
-#+RESULTS:
-| /Users/g.clark/.emacs.d/elpa/ace-jump-mode-20140616.815/ace-jump-mode.elc |
 * yaml, json & CSV modes
 Yaml
 #+begin_src emacs-lisp
@@ -874,10 +706,6 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
         backup-directory-alist `((".*" . ,temporary-file-directory))
         auto-save-file-name-transforms `((".*" ,temporary-file-directory t)))
 
-  ;; Enable scala-mode for highlighting, indentation and motion commands
-  (use-package scala-mode
-    :interpreter ("scala" . scala-mode))
-
   ;; Enable sbt mode for executing sbt commands
   (use-package sbt-mode
     :commands sbt-start sbt-command
@@ -890,10 +718,6 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
      minibuffer-local-completion-map)
      ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
      (setq sbt:program-options '("-Dsbt.supershell=false")))
-
-  ;; Enable nice rendering of diagnostics like compile errors.
-  (use-package flycheck
-    :init (global-flycheck-mode))
 
   (use-package lsp-mode
     ;; Optional - enable lsp-mode automatically in scala files
@@ -922,11 +746,6 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
   ;;   In that case you have to not only disable this but also remove from the packages since
   ;;   lsp-mode can activate it automatically.
   (use-package lsp-ui)
-
-  ;; lsp-mode supports snippets, but in order for them to work you need to use yasnippet
-  ;; If you don't want to use snippets set lsp-enable-snippet to nil in your lsp-mode settings
-  ;; to avoid odd behavior with snippets and indentation
-  (use-package yasnippet)
 
   ;; Use company-capf as a completion provider.
   ;;
