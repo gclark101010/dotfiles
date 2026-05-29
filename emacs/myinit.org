@@ -85,7 +85,7 @@ Visual line mode to for line wrap
 
 
 #+END_SRC
-* Auto-complete/company
+* Auto-complete
 #+begin_src emacs-lisp
   (use-package auto-complete
     :ensure t
@@ -132,7 +132,13 @@ Visual line mode to for line wrap
 	:init
 	(add-hook 'python-mode-hook 'jedi:setup)
 	(add-hook 'python-mode-hook 'jedi:ac-setup)
-	)
+	:config
+	;; Pin jedi's RPC server to its own managed venv so that poetry-tracking-mode
+	;; (which mutates exec-path via pyvenv) doesn't cause it to resolve "python"
+	;; to a poetry venv that has no jediepcserver installed.
+	(setq jedi:server-command
+	      (list (expand-file-name "~/.emacs.d/.python-environments/default/bin/python")
+		    jedi:server-script)))
 
     (when (memq window-system '(mac ns))
       (use-package exec-path-from-shell
@@ -165,8 +171,41 @@ Visual line mode to for line wrap
 
 ** Poetry
 #+begin_src emacs-lisp
-  (use-package poetry
- :ensure t)
+(use-package poetry
+:ensure t)
+
+;; Enable Poetry tracking mode globally
+(poetry-tracking-mode 1)
+
+;; Set the strategy to use Projectile for switching environments
+(setq poetry-tracking-strategy 'projectile)
+
+;; Guard against poetry-tracking-mode activating invalid paths as virtualenvs.
+;; When a project has no poetry venv configured, `poetry env info -p` returns
+;; nothing; poetry.el then calls (pyvenv-activate "") which expands "" to
+;; default-directory (the source file's directory). jediepcserver.py reads
+;; VIRTUAL_ENV and tries to use that directory as a Python env, crashing.
+(defun my/pyvenv-activate-guard (orig-fun directory &rest args)
+  "Skip activation if DIRECTORY is not a real virtualenv."
+  (let ((python (expand-file-name "bin/python" directory)))
+    (if (file-executable-p python)
+        (apply orig-fun directory args)
+      nil)))
+
+(advice-add 'pyvenv-activate :around #'my/pyvenv-activate-guard)
+
+;; Suppress the *poetry-error* popup when the buffer is empty.
+;; This happens when `poetry env info -p` exits non-zero because no virtualenv
+;; is configured — the command produces no output, leaving an empty buffer that
+;; still gets displayed. Real errors have content and are unaffected.
+(defun my/poetry-suppress-empty-error-buffer (&rest _)
+  "Close *poetry-error* if it has no content (noise from unconfigured venv)."
+  (when-let ((buf (get-buffer (poetry-buffer-name "error"))))
+    (when (string-blank-p (with-current-buffer buf (buffer-string)))
+      (delete-windows-on buf)
+      (kill-buffer buf))))
+
+(advice-add 'poetry--run-next-call-from-queue :after #'my/poetry-suppress-empty-error-buffer)
 #+end_src
 
 * Undo Tree
