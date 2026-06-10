@@ -628,14 +628,14 @@ Json
     :ensure t)
 #+end_src
 * UUIDs
-From [[https://www.ianoxley.com/blog/2015/03/27/inserting-a-guid-in-emacs][Inserting a UUID in Emacs | Ian Oxley]]
 #+begin_src emacs-lisp
-  (defun uuid-insert()
-    (interactive)
-    (require 'uuid)
-    (insert (upcase (uuid-string))))
+  (use-package uuidgen
+    :ensure t
+    )
 
-  (global-set-key (kbd "C-c C-'") 'uuid-insert)
+  (use-package uuidgen
+    :ensure t
+    :bind ("C-c C-'" . uuidgen))
 #+end_src
 * Pass Generator
 source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password Generator]]
