@@ -575,6 +575,17 @@ Show buffer file path (mirrors Vim's =C-g=, which is reserved for =keyboard-quit
     (lambda () (interactive) (message "%s" (buffer-file-name))))
 #+end_src
 
+* Treemacs
+#+begin_src emacs-lisp
+  (use-package treemacs
+    :ensure t
+    :bind (("C-c t" . treemacs)))
+
+  (use-package treemacs-evil
+    :after (treemacs evil)
+    :ensure t)
+#+end_src
+
 * Easy GPG Ascii
 #+BEGIN_SRC emacs-lisp
   ;; From https://unix.stackexchange.com/a/276430
