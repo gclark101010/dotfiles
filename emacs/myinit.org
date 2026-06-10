@@ -569,6 +569,12 @@ Org Cycle (expand tabs): [[https://emacs.stackexchange.com/a/73457][Stack Overfl
   (evil-define-key 'normal org-mode-map (kbd "<tab>") #'org-cycle)
 #+end_src
 
+Show buffer file path (mirrors Vim's =C-g=, which is reserved for =keyboard-quit= in Emacs)
+#+begin_src emacs-lisp
+  (evil-define-key 'normal 'global (kbd "g C-g")
+    (lambda () (interactive) (message "%s" (buffer-file-name))))
+#+end_src
+
 * Easy GPG Ascii
 #+BEGIN_SRC emacs-lisp
   ;; From https://unix.stackexchange.com/a/276430
