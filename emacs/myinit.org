@@ -119,6 +119,11 @@ Visual line mode to for line wrap
     :init (global-flycheck-mode t)
     :custom (flycheck-disabled-checkers '(org-lint)))
 
+  (add-hook 'python-mode-hook
+    (lambda ()
+      (flycheck-select-checker 'python-ruff)
+      (flycheck-add-next-checker 'python-ruff 'python-pyright)))
+
   ;; Below fixes a weird python shell problem
   ;; https://github.com/syl20bnr/spacemacs/issues/8797
   (setq python-shell-completion-native-enable nil)
