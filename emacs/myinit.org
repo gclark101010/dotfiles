@@ -4,7 +4,7 @@
   (require 'package)
   (setq package-enable-at-startup nil)
   (add-to-list 'package-archives
-               '("mepa" . "https://melpa.org/packages/"))
+               '("melpa" . "https://melpa.org/packages/"))
 
   (package-initialize)
 
@@ -777,7 +777,6 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
     (lsp-mode . dap-ui-mode))
 #+end_src
 
-
 * Markdown Mode
 #+begin_src emacs-lisp
   (use-package markdown-mode
@@ -786,4 +785,11 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
     :init (setq markdown-command "multimarkdown")
     :bind (:map markdown-mode-map
            ("C-c C-e" . markdown-do)))
+#+end_src
+
+* Magit
+#+begin_src emacs-lisp
+(use-package magit
+  :ensure t
+  :bind (("C-x g" . magit-status)))
 #+end_src
