@@ -579,10 +579,15 @@ Show buffer file path (mirrors Vim's =C-g=, which is reserved for =keyboard-quit
 #+begin_src emacs-lisp
   (use-package treemacs
     :ensure t
-    :bind (("C-c t" . treemacs)))
+    :bind (("C-c t"   . treemacs)
+           ("C-x t s" . treemacs-select-window)))
 
   (use-package treemacs-evil
     :after (treemacs evil)
+    :ensure t)
+
+  (use-package treemacs-projectile
+    :after (treemacs projectile)
     :ensure t)
 #+end_src
 
