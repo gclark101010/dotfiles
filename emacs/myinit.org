@@ -820,3 +820,27 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
   :ensure t
   :bind (("C-x g" . magit-status)))
 #+end_src
+
+This code is from [[https://stackoverflow.com/a/32914548][StackOverflow]] for opening Github PR in browser after pushing branch
+#+begin_src emacs-lisp
+  (defun endless/visit-pull-request-url ()
+  "Visit the current branch's PR on Github."
+  (interactive)
+  (let ((repo (magit-get "remote" (magit-get-remote) "url")))
+    (if (string-match "github\\.com" repo)
+    (visit-gh-pull-request repo)
+  (user-error "Remote is not on GitHub: %s" repo))))
+
+
+(defun visit-gh-pull-request (repo)
+  "Visit the current branch's PR on Github."
+  (interactive)
+  (browse-url
+   (format "https://github.com/%s/pull/new/%s"
+     (replace-regexp-in-string
+      "\\`.+github\\.com:\\(.+\\)\\.git\\'" "\\1"
+      repo)
+     (cdr (magit-get-remote-branch)))))
+
+#+end_src
+
