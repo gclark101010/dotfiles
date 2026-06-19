@@ -116,13 +116,25 @@ Visual line mode to for line wrap
 #+BEGIN_SRC emacs-lisp
   (use-package flycheck
     :ensure t
-    :init (global-flycheck-mode t)
-    :custom (flycheck-disabled-checkers '(org-lint)))
+    :config
+    (setq flycheck-disabled-checkers '(org-lint))
+    (global-flycheck-mode 1))
 
   (add-hook 'python-mode-hook
     (lambda ()
-      (flycheck-select-checker 'python-ruff)
-      (flycheck-add-next-checker 'python-ruff 'python-pyright)))
+      (when (executable-find "ruff")
+        (flycheck-select-checker 'python-ruff))))
+
+  (add-hook 'pyvenv-post-activate-hooks
+    (lambda ()
+      (when (and (eq major-mode 'python-mode)
+                 (executable-find "ruff"))
+        (flycheck-select-checker 'python-ruff))))
+
+    (add-hook 'python-mode-hook
+      (lambda ()
+        (flycheck-add-next-checker 'python-ruff 'python-pyright)))
+
 
   ;; Below fixes a weird python shell problem
   ;; https://github.com/syl20bnr/spacemacs/issues/8797
