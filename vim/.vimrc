@@ -42,3 +42,11 @@ call plug#end()
 let g:indent_guides_enable_on_vim_startup = 1
 let g:indent_guides_tab_guides = 1
 let g:indentLine_char_list = ['|', '¦', '┆', '┊']
+
+" Trim Whitespace
+" https://vi.stackexchange.com/a/456
+fun! TrimWhitespace()
+        let l:save = winsaveview()
+            keeppatterns %s/\s\+$//e
+                call winrestview(l:save)
+endfun

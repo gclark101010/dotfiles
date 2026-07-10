@@ -1,10 +1,10 @@
-#+STARTIP: overview
+#+STARTUP: overview
 * Package Repositories & Source Code
 #+BEGIN_SRC emacs-lisp
   (require 'package)
   (setq package-enable-at-startup nil)
   (add-to-list 'package-archives
-               '("mepa" . "https://melpa.org/packages/"))
+               '("melpa" . "https://melpa.org/packages/"))
 
   (package-initialize)
 
@@ -23,8 +23,6 @@
 (use-package zenburn-theme
   :ensure t
   :config (load-theme 'zenburn t))
-
-;; (load-theme 'tsdh-dark t)
 #+END_SRC
 * Cliplink
 #+begin_src emacs-lisp
@@ -51,14 +49,10 @@ Visual line mode to for line wrap
 (global-visual-line-mode t)
 #+end_src
 * Which key
-Issues with which-key with Emacs 27.2 running on macOS Catalina
 #+BEGIN_SRC emacs-lisp
-  ;;  (add-to-list 'load-path "/Users/g.clark/.dotfiles/emacs/which-key.el")
-
-    (use-package which-key
-      :ensure t
-      :config (which-key-mode))
-
+  (use-package which-key
+    :ensure t
+    :config (which-key-mode))
 #+END_SRC
 
 * The rest
@@ -91,7 +85,7 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
 
 
 #+END_SRC
-* Auto-complete/company
+* Auto-complete
 #+begin_src emacs-lisp
   (use-package auto-complete
     :ensure t
@@ -100,16 +94,10 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
       (ac-config-default)
       (global-auto-complete-mode t)
       ))
-
-  ;; (use-package org-ac
-  ;;   :ensure t
-  ;;   :init
-  ;;   )
 #+end_src
 
 * Projectile
 #+BEGIN_SRC emacs-lisp
-  ;; projectile
   (use-package projectile
   :ensure t
   :config
@@ -128,8 +116,25 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
 #+BEGIN_SRC emacs-lisp
   (use-package flycheck
     :ensure t
-    :init
-    (global-flycheck-mode t))
+    :config
+    (setq-default flycheck-disabled-checkers '(org-lint))
+    (global-flycheck-mode 1))
+
+  (add-hook 'python-mode-hook
+    (lambda ()
+      (when (executable-find "ruff")
+        (flycheck-select-checker 'python-ruff))))
+
+  (add-hook 'pyvenv-post-activate-hooks
+    (lambda ()
+      (when (and (eq major-mode 'python-mode)
+                 (executable-find "ruff"))
+        (flycheck-select-checker 'python-ruff))))
+
+    (add-hook 'python-mode-hook
+      (lambda ()
+        (flycheck-add-next-checker 'python-ruff 'python-pyright)))
+
 
   ;; Below fixes a weird python shell problem
   ;; https://github.com/syl20bnr/spacemacs/issues/8797
@@ -144,7 +149,13 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
 	:init
 	(add-hook 'python-mode-hook 'jedi:setup)
 	(add-hook 'python-mode-hook 'jedi:ac-setup)
-	)
+	:config
+	;; Pin jedi's RPC server to its own managed venv so that poetry-tracking-mode
+	;; (which mutates exec-path via pyvenv) doesn't cause it to resolve "python"
+	;; to a poetry venv that has no jediepcserver installed.
+	(setq jedi:server-command
+	      (list (expand-file-name "~/.emacs.d/.python-environments/default/bin/python")
+		    jedi:server-script)))
 
     (when (memq window-system '(mac ns))
       (use-package exec-path-from-shell
@@ -158,8 +169,6 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
     :ensure t
     :init
     (elpy-enable))
-
-
 #+END_SRC
 
 ** Yasnippet
@@ -177,17 +186,43 @@ Issues with which-key with Emacs 27.2 running on macOS Catalina
   (setq yas-snippet-dirs (append yas-snippet-dirs '("/Users/g.clark/.dotfiles/emacs/yasnippet/extras/imported")))
 #+END_SRC
 
-** Compile
-[[https://stackoverflow.com/questions/9037833/how-to-set-the-default-directory-of-compilation-in-emacs][How to set the default-directory of compilation in Emacs? - Stack Overflow]]
-Doesn't work :(
+** Poetry
 #+begin_src emacs-lisp
-  (defun compile-in-parent-directory ()
-    (interactive)
-    (let ((default-directory
-            (if (string= (file-name-extension buffer-file-name) "py")
-                (concat default-directory "..")
-              default-directory))))
-    (call-interactively #'compile))
+(use-package poetry
+:ensure t)
+
+;; Enable Poetry tracking mode globally
+(poetry-tracking-mode 1)
+
+;; Set the strategy to use Projectile for switching environments
+(setq poetry-tracking-strategy 'projectile)
+
+;; Guard against poetry-tracking-mode activating invalid paths as virtualenvs.
+;; When a project has no poetry venv configured, `poetry env info -p` returns
+;; nothing; poetry.el then calls (pyvenv-activate "") which expands "" to
+;; default-directory (the source file's directory). jediepcserver.py reads
+;; VIRTUAL_ENV and tries to use that directory as a Python env, crashing.
+(defun my/pyvenv-activate-guard (orig-fun directory &rest args)
+  "Skip activation if DIRECTORY is not a real virtualenv."
+  (let ((python (expand-file-name "bin/python" directory)))
+    (if (file-executable-p python)
+        (apply orig-fun directory args)
+      nil)))
+
+(advice-add 'pyvenv-activate :around #'my/pyvenv-activate-guard)
+
+;; Suppress the *poetry-error* popup when the buffer is empty.
+;; This happens when `poetry env info -p` exits non-zero because no virtualenv
+;; is configured — the command produces no output, leaving an empty buffer that
+;; still gets displayed. Real errors have content and are unaffected.
+(defun my/poetry-suppress-empty-error-buffer (&rest _)
+  "Close *poetry-error* if it has no content (noise from unconfigured venv)."
+  (when-let ((buf (get-buffer (poetry-buffer-name "error"))))
+    (when (string-blank-p (with-current-buffer buf (buffer-string)))
+      (delete-windows-on buf)
+      (kill-buffer buf))))
+
+(advice-add 'poetry--run-next-call-from-queue :after #'my/poetry-suppress-empty-error-buffer)
 #+end_src
 
 * Undo Tree
@@ -248,8 +283,6 @@ Doesn't work :(
 
 #+END_SRC
 
-#+RESULTS:
-: t
 * Ace-Window
 Ace window is that handy guy that gives you numbers to choose from when moving about windows
 #+BEGIN_SRC emacs-lisp
@@ -336,9 +369,6 @@ Below sourced from [[https://emacs.stackexchange.com/a/60590][StackOverflow]]
 Following along with Prot for this:
 [[https://www.youtube.com/watch?v=qCdScs4YO8k][Emacs: Introduction to ORG-CAPTURE (YouTube)]]
 #+BEGIN_SRC emacs-lisp
-  ;; I want capture org files to be in same directory as buffer from which template was called
-  ;;(setq org-default-notes-file (concat default-directory "meetings.org"))
-
   ;; set keybindg C-c c
   (global-set-key (kbd "C-c c") 'org-capture)
 
@@ -347,15 +377,14 @@ Following along with Prot for this:
   (setq org-capture-templates		
         '(("m" "Meeting")
           ("m1" "Meeting to org directory" entry
-           (file+headline "~/Documents/org/meetings2024.org" "Meetings")
+           (file+headline "~/Documents/org/meetings2026.org" "Meetings")
            "** %^{Meeting Title:} %U\nSCHEDULED: %^U\n*** Attendees\n*** Minutes\n%?\n*** Action Items\n")
           ("m2" "Meeting to this directory" entry
            (function 
             (lambda ()
               (find-file
                (concat (file-name-directory (or (org-capture-get :original-file t) (org-capture-get :original-file))) "meetings.org"))
-              ;; (end-of-buffer)
-              ) 
+              )
             )
            "* %^{Meeting Title:}\nSCHEDULED: %^U\n** Agenda\n** Attendees\n** Minutes\n%?\n** Action Items\n"
            )
@@ -375,147 +404,19 @@ Following along with Prot for this:
 #+end_src
 
 ** Babel & Literate Programming
-
-missing ob-scala.el
-copy/pasty from https://code.orgmode.org/bzg/org-mode/commit/90986a8e2fe881105cc6d869a7592581520646d2
 #+BEGIN_SRC emacs-lisp
-  ;;; ob-scala.el --- Babel Functions for Scala        -*- lexical-binding: t; -*-
-
-  ;; Copyright (C) 2012-2017 Free Software Foundation, Inc.
-
-  ;; Author: Andrzej Lichnerowicz
-  ;; Keywords: literate programming, reproducible research
-  ;; Homepage: http://orgmode.org
-
-  ;; This file is part of GNU Emacs.
-
-  ;; GNU Emacs is free software: you can redistribute it and/or modify
-  ;; it under the terms of the GNU General Public License as published by
-  ;; the Free Software Foundation, either version 3 of the License, or
-  ;; (at your option) any later version.
-
-  ;; GNU Emacs is distributed in the hope that it will be useful,
-  ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  ;; GNU General Public License for more details.
-
-  ;; You should have received a copy of the GNU General Public License
-  ;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
-
-  ;;; Commentary:
-  ;; Currently only supports the external execution.  No session support yet.
-
-  ;;; Requirements:
-  ;; - Scala language :: http://www.scala-lang.org/
-  ;; - Scala major mode :: Can be installed from Scala sources
-  ;;  https://github.com/scala/scala-dist/blob/master/tool-support/src/emacs/scala-mode.el
-
-  ;;; Code:
-  (require 'ob)
-
-  (defvar org-babel-tangle-lang-exts) ;; Autoloaded
-  (add-to-list 'org-babel-tangle-lang-exts '("scala" . "scala"))
-  (defvar org-babel-default-header-args:scala '())
-  (defvar org-babel-scala-command "scala"
-    "Name of the command to use for executing Scala code.")
-
-  (defun org-babel-execute:scala (body params)
-    "Execute a block of Scala code with org-babel.  This function is
-  called by `org-babel-execute-src-block'"
-    (message "executing Scala source code block")
-    (let* ((processed-params (org-babel-process-params params))
-           (session (org-babel-scala-initiate-session (nth 0 processed-params)))
-           (result-params (nth 2 processed-params))
-           (result-type (cdr (assq :result-type params)))
-           (full-body (org-babel-expand-body:generic
-                       body params))
-           (result (org-babel-scala-evaluate
-                    session full-body result-type result-params)))
-
-      (org-babel-reassemble-table
-       result
-       (org-babel-pick-name
-        (cdr (assq :colname-names params)) (cdr (assq :colnames params)))
-       (org-babel-pick-name
-        (cdr (assq :rowname-names params)) (cdr (assq :rownames params))))))
-
-  (defvar org-babel-scala-wrapper-method
-
-  "var str_result :String = null;
-
-  Console.withOut(new java.io.OutputStream() {def write(b: Int){
-  }}) {
-    str_result = {
-  %s
-    }.toString
-  }
-
-  print(str_result)
-  ")
-
-
-  (defun org-babel-scala-evaluate
-      (session body &optional result-type result-params)
-    "Evaluate BODY in external Scala process.
-  If RESULT-TYPE equals `output' then return standard output as a string.
-  If RESULT-TYPE equals `value' then return the value of the last statement
-  in BODY as elisp."
-    (when session (error "Sessions are not (yet) supported for Scala"))
-    (pcase result-type
-      (`output
-       (let ((src-file (org-babel-temp-file "scala-")))
-         (with-temp-file src-file (insert body))
-         (org-babel-eval
-          (concat org-babel-scala-command " " src-file) "")))
-      (`value
-       (let* ((src-file (org-babel-temp-file "scala-"))
-              (wrapper (format org-babel-scala-wrapper-method body)))
-         (with-temp-file src-file (insert wrapper))
-         (let ((raw (org-babel-eval
-                     (concat org-babel-scala-command " " src-file) "")))
-           (org-babel-result-cond result-params
-             raw
-             (org-babel-script-escape raw)))))))
-
-
-  (defun org-babel-prep-session:scala (_session _params)
-    "Prepare SESSION according to the header arguments specified in PARAMS."
-    (error "Sessions are not (yet) supported for Scala"))
-
-  (defun org-babel-scala-initiate-session (&optional _session)
-    "If there is not a current inferior-process-buffer in SESSION
-  then create.  Return the initialized session.  Sessions are not
-  supported in Scala."
-    nil)
-
-  (provide 'ob-scala)
-
-
-
-  ;;; ob-scala.el ends here
-
-#+END_SRC
-
-Babel
-#+BEGIN_SRC emacs-lisp
-  ;;    (use-package scala-mode
-        ;; :interpreter
-        ;; ("scala" . scala-mode))
-
-  ;; I can't get Scala mode to work... :(
   (use-package scala-mode
     :mode "\\.s\\(cala\\|bt\\)$"
+    :interpreter ("scala" . scala-mode)
     :ensure t
     :config
       (load-file "~/.emacs.d/lisp/ob-scala.el"))
 
 
-;; active Babel languages
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((R . t)
    (python . t)
-;; (scala . t)
    (awk . t)))
 #+END_SRC
 
@@ -588,25 +489,6 @@ PR Links
   (global-set-key (kbd "C-x p p") 'insert-pr-url)
 #+end_src
 
-#+begin_src emacs-lisp
-  (defun insert-pr-url ()
-    "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
-    (interactive)
-    (let* (
-              (url (current-kill 0))
-              (pr-ticket-list (split-string url "/"))
-              (pr-link (format "[[%s][%s PR#%s]]" url (nth 4 pr-ticket-list) (nth 6 pr-ticket-list)))
-          )
-      (insert pr-link)
-      )
-    )
-
-  (global-set-key (kbd "C-x p p") 'insert-pr-url)
-#+end_src
-
-#+RESULTS:
-: insert-pr-url
-
 Slack
 #+begin_src emacs-lisp
   (defun insert-slack-url ()
@@ -624,6 +506,41 @@ Slack
   (global-set-key (kbd "C-x p s") 'insert-slack-url)
 #+end_src
 
+Teams
+#+begin_src emacs-lisp
+  (defun insert-teams-url ()
+    "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
+    (interactive)
+    (let* (
+              (url (current-kill 0))
+              (teams-ticket (car (last (split-string url "/"))))
+              (teams-link (format "[[%s][Teams]]" url teams-ticket))
+          )
+      (insert teams-link)
+      )
+    )
+
+  (global-set-key (kbd "C-x p t") 'insert-teams-url)
+#+end_src
+
+Confluence Pages w/ Name in URL
+#+begin_src emacs-lisp
+  (defun insert-confluence-url ()
+    "Cut JIRA ticket URL from clipboard & Transform into Org Mode Link"
+    (interactive)
+    (let* (
+              (url (current-kill 0))
+              (confluence-page-name
+                (s-replace "+" " " (car (last (split-string url "/")))))
+              (confluence-link (format "[[%s][%s]]" url confluence-page-name))
+          )
+      (insert confluence-link)
+      )
+    )
+
+  (global-set-key (kbd "C-x p c") 'insert-confluence-url)
+#+end_src
+
 ** Flyspell
 #+begin_src emacs-lisp
   (use-package flyspell
@@ -631,9 +548,26 @@ Slack
   (add-hook 'org-mode-hook 'turn-on-flyspell)
 #+end_src
 
+** Rich Text Copy
+#+begin_src emacs-lisp
+  (defun my/formatted-copy ()
+    "Export region to HTML and copy as RTF to the system clipboard."
+    (interactive)
+    (save-window-excursion
+      (let* ((buf (org-export-to-buffer 'html "*Formatted Copy*" nil nil t t))
+             (html (with-current-buffer buf (buffer-string))))
+        (with-current-buffer buf
+          (shell-command-on-region
+           (point-min) (point-max)
+           "textutil -stdin -format html -convert rtf -stdout | pbcopy -Prefer rtf"))
+        (kill-buffer buf))))
+
+  (global-set-key (kbd "C-c M-c") 'my/formatted-copy)
+#+end_src
+
 * Recreate scratch buffer
-#+BEGIN_SRC emacs-lisp
 [[http://www.emacswiki.org/emacs/RecreateScratchBuffer][Recreate Scratch Buffer (emacswiki.org)]]
+#+BEGIN_SRC emacs-lisp
 (defun create-scratch-buffer nil
    "create a scratch buffer"
    (interactive)
@@ -661,6 +595,34 @@ Evil Surround
   :ensure t
   :config
   (global-evil-surround-mode 1))
+#+end_src
+
+Org Cycle (expand tabs): [[https://emacs.stackexchange.com/a/73457][Stack Overflow]]
+#+begin_src emacs-lisp
+  (setq evil-want-C-i-jump nil)
+  (evil-define-key 'normal org-mode-map (kbd "<tab>") #'org-cycle)
+#+end_src
+
+Show buffer file path (mirrors Vim's =C-g=, which is reserved for =keyboard-quit= in Emacs)
+#+begin_src emacs-lisp
+  (evil-define-key 'normal 'global (kbd "g C-g")
+    (lambda () (interactive) (message "%s" (buffer-file-name))))
+#+end_src
+
+* Treemacs
+#+begin_src emacs-lisp
+  (use-package treemacs
+    :ensure t
+    :bind (("C-c t"   . treemacs)
+           ("C-x t s" . treemacs-select-window)))
+
+  (use-package treemacs-evil
+    :after (treemacs evil)
+    :ensure t)
+
+  (use-package treemacs-projectile
+    :after (treemacs projectile)
+    :ensure t)
 #+end_src
 
 * Easy GPG Ascii
@@ -699,15 +661,6 @@ Evil Surround
 
 #+END_SRC
 
-* package cl is deprecated
-https://github.com/hlissner/doom-emacs/issues/3372
-#+begin_src emacs-lisp
-;;(require 'loadhist)
-;;(file-dependents (feature-file 'cl))
-#+end_src
-
-#+RESULTS:
-| /Users/g.clark/.emacs.d/elpa/ace-jump-mode-20140616.815/ace-jump-mode.elc |
 * yaml, json & CSV modes
 Yaml
 #+begin_src emacs-lisp
@@ -731,21 +684,20 @@ Json
     :ensure t)
 #+end_src
 * UUIDs
-From [[https://www.ianoxley.com/blog/2015/03/27/inserting-a-guid-in-emacs][Inserting a UUID in Emacs | Ian Oxley]]
 #+begin_src emacs-lisp
-  (defun uuid-insert()
-    (interactive)
-    (require 'uuid)
-    (insert (upcase (uuid-string))))
+  (use-package uuidgen
+    :ensure t
+    )
 
-  (global-set-key (kbd "C-c C-'") 'uuid-insert)
+  (use-package uuidgen
+    :ensure t
+    :bind ("C-c C-'" . uuidgen))
 #+end_src
-* COMMENT Pass Generator
-- Comment means this block isn't run. Issue with =defun*=
+* Pass Generator
 source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password Generator]]
 
 #+begin_src emacs-lisp
-  (defun* make-password (length &optional (upper t) (lower t) (number t) (symbol nil) (ambiguous nil))
+  (cl-defun make-password (length &optional (upper t) (lower t) (number t) (symbol nil) (ambiguous nil))
     "Return a string of LENGTH random characters.  If UPPER is non-nil,
   use uppercase letters.  If lower is non-nil, use lowercase letters.
   If NUMBER is non-nil, use numbers.  If SYMBOL is non-nil, use one of
@@ -755,31 +707,31 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
     (let ((char-list (make-password-char-list upper lower number symbol ambiguous))
            position password)
       (random t)
-    (loop for i from 1 to length 
+    (cl-loop for i from 1 to length
           do (setq position (random (length char-list))
                    password (concat password (string (nth position char-list)))))
-    (if (interactive-p)
+    (if (called-interactively-p 'any)
         (let* ((strength (make-password-strength length upper lower number symbol ambiguous))
                (bits (car strength))
                (number (cadr strength)))
-          (message "The password \"%s\" is one of 10^%d possible and has a bit equivalence of %d" 
+          (message "The password \"%s\" is one of 10^%d possible and has a bit equivalence of %d"
                    password (round number) (round bits)))
       password)))
 
   (defun make-password-char-list (upper lower number symbol ambiguous)
     (let* ((upper-chars-ambiguous '(?I ?O ?G))
-           (upper-chars (loop for i from ?A to ?Z unless 
+           (upper-chars (cl-loop for i from ?A to ?Z unless
                               (member i upper-chars-ambiguous)
                               collect i))
            (lower-chars-ambiguous '(?l ?o))
-           (lower-chars (loop for i from ?a to ?z unless 
+           (lower-chars (cl-loop for i from ?a to ?z unless
                               (member i lower-chars-ambiguous)
                               collect i))
            (number-chars-ambiguous '(?0 ?1 ?6))
-           (number-chars (loop for i from ?0 to ?9 unless
+           (number-chars (cl-loop for i from ?0 to ?9 unless
                                (member i number-chars-ambiguous)
                                collect i))
-           (symbol-chars '(?! ?@ ?# ?$ ?% ?& ?* ?( ?) ?+ ?= ?/ 
+           (symbol-chars '(?! ?@ ?# ?$ ?% ?& ?* ?( ?) ?+ ?= ?/
                               ?{ ?} ?[ ?] ?: ?\; ?< ?>))
            (symbol-chars-ambiguous '(?_ ?- ?| ?, ?. ?` ?' ?~ ?^ ?\"))
            char-list)
@@ -793,7 +745,7 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
         (setq char-list (append char-list symbol-chars)))
     (if ambiguous
         (setq char-list (append char-list
-                                upper-chars-ambiguous 
+                                upper-chars-ambiguous
                                 lower-chars-ambiguous
                                 number-chars-ambiguous
                                 symbol-chars-ambiguous)))
@@ -809,7 +761,7 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
      (y-or-n-p "User symbols: ")
      (y-or-n-p "User ambiguous characters: ")))
 
-  (defun* make-password-strength (length &optional (upper t) (lower t) (number t) (symbol nil) (ambiguous nil))
+  (cl-defun make-password-strength (length &optional (upper t) (lower t) (number t) (symbol nil) (ambiguous nil))
     "Calculate the number of possible passwords that could be generated
   given the criteria of LENGTH and use of UPPER, LOWER, NUMBER, SYMBOL,
   and AMBIGUOUS characters"
@@ -817,40 +769,18 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
     (let* ((char-list (make-password-char-list upper lower number symbol ambiguous))
            (bits (/ (* length (log (length char-list))) (log 2)))
            (number (/ (* bits (log 2)) (log 10))))
-      (if (interactive-p)
+      (if (called-interactively-p 'any)
           (message "number of combinations is 10^%d with a bit equivalence of %d" (round number) (round bits))
         (list bits number))))
 #+end_src
 
-#+RESULTS:
-: make-password-strength
-
 * Scala
 #+begin_src emacs-lisp
-  ;; (require 'package)
-
-  ;; ;; Add melpa to your packages repositories
-  ;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-
-  ;; (package-initialize)
-
-  ;; ;; Install use-package if not already installed
-  ;; (unless (package-installed-p 'use-package)
-  ;;   (package-refresh-contents)
-  ;;   (package-install 'use-package))
-
-  ;; (require 'use-package)
-
-  ;; Enable defer and ensure by default for use-package
   ;; Keep auto-save/backup files separate from source code:  https://github.com/scalameta/metals/issues/1027
   (setq use-package-always-defer t
         use-package-always-ensure t
         backup-directory-alist `((".*" . ,temporary-file-directory))
         auto-save-file-name-transforms `((".*" ,temporary-file-directory t)))
-
-  ;; Enable scala-mode for highlighting, indentation and motion commands
-  (use-package scala-mode
-    :interpreter ("scala" . scala-mode))
 
   ;; Enable sbt mode for executing sbt commands
   (use-package sbt-mode
@@ -864,10 +794,6 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
      minibuffer-local-completion-map)
      ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
      (setq sbt:program-options '("-Dsbt.supershell=false")))
-
-  ;; Enable nice rendering of diagnostics like compile errors.
-  (use-package flycheck
-    :init (global-flycheck-mode))
 
   (use-package lsp-mode
     ;; Optional - enable lsp-mode automatically in scala files
@@ -890,23 +816,8 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
   ;; Add metals backend for lsp-mode
   (use-package lsp-metals)
 
-  ;; Enable nice rendering of documentation on hover
-  ;;   Warning: on some systems this package can reduce your emacs responsiveness significally.
-  ;;   (See: https://emacs-lsp.github.io/lsp-mode/page/performance/)
-  ;;   In that case you have to not only disable this but also remove from the packages since
-  ;;   lsp-mode can activate it automatically.
   (use-package lsp-ui)
 
-  ;; lsp-mode supports snippets, but in order for them to work you need to use yasnippet
-  ;; If you don't want to use snippets set lsp-enable-snippet to nil in your lsp-mode settings
-  ;; to avoid odd behavior with snippets and indentation
-  (use-package yasnippet)
-
-  ;; Use company-capf as a completion provider.
-  ;;
-  ;; To Company-lsp users:
-  ;;   Company-lsp is no longer maintained and has been removed from MELPA.
-  ;;   Please migrate to company-capf.
   (use-package company
     :hook (scala-mode . company-mode)
     :config
@@ -920,5 +831,49 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
     :hook
     (lsp-mode . dap-mode)
     (lsp-mode . dap-ui-mode))
+#+end_src
+
+* Markdown Mode
+#+begin_src emacs-lisp
+  (use-package markdown-mode
+    :ensure t
+    :mode ("README\\.md\\'" . gfm-mode)
+    :init (setq markdown-command "pandoc")
+    :bind (:map markdown-mode-map
+           ("C-c C-e" . markdown-do)))
+
+  (use-package markdown-toc
+    :ensure t
+    :after markdown-mode)
+#+end_src
+
+* Magit
+#+begin_src emacs-lisp
+(use-package magit
+  :ensure t
+  :bind (("C-x g" . magit-status)))
+#+end_src
+
+This code is from [[https://stackoverflow.com/a/32914548][StackOverflow]] for opening Github PR in browser after pushing branch
+#+begin_src emacs-lisp
+  (defun endless/visit-pull-request-url ()
+  "Visit the current branch's PR on Github."
+  (interactive)
+  (let ((repo (magit-get "remote" (magit-get-remote) "url")))
+    (if (string-match "github\\.com" repo)
+    (visit-gh-pull-request repo)
+  (user-error "Remote is not on GitHub: %s" repo))))
+
+
+(defun visit-gh-pull-request (repo)
+  "Visit the current branch's PR on Github."
+  (interactive)
+  (browse-url
+   (format "https://github.com/%s/pull/new/%s"
+     (replace-regexp-in-string
+      "\\`.+github\\.com:\\(.+\\)\\.git\\'" "\\1"
+      repo)
+     (magit-get-current-branch))))
+
 #+end_src
 
