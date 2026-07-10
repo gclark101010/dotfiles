@@ -548,6 +548,23 @@ Confluence Pages w/ Name in URL
   (add-hook 'org-mode-hook 'turn-on-flyspell)
 #+end_src
 
+** Rich Text Copy
+#+begin_src emacs-lisp
+  (defun my/formatted-copy ()
+    "Export region to HTML and copy as RTF to the system clipboard."
+    (interactive)
+    (save-window-excursion
+      (let* ((buf (org-export-to-buffer 'html "*Formatted Copy*" nil nil t t))
+             (html (with-current-buffer buf (buffer-string))))
+        (with-current-buffer buf
+          (shell-command-on-region
+           (point-min) (point-max)
+           "textutil -stdin -format html -convert rtf -stdout | pbcopy -Prefer rtf"))
+        (kill-buffer buf))))
+
+  (global-set-key (kbd "C-c M-c") 'my/formatted-copy)
+#+end_src
+
 * Recreate scratch buffer
 [[http://www.emacswiki.org/emacs/RecreateScratchBuffer][Recreate Scratch Buffer (emacswiki.org)]]
 #+BEGIN_SRC emacs-lisp
