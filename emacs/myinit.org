@@ -873,7 +873,7 @@ This code is from [[https://stackoverflow.com/a/32914548][StackOverflow]] for op
      (replace-regexp-in-string
       "\\`.+github\\.com:\\(.+\\)\\.git\\'" "\\1"
       repo)
-     (cdr (magit-get-remote-branch)))))
+     (magit-get-current-branch))))
 
 #+end_src
 
