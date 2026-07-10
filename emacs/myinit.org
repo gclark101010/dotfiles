@@ -821,9 +821,13 @@ source: [[https://www.emacswiki.org/emacs/PasswordGenerator][EmacsWiki: Password
   (use-package markdown-mode
     :ensure t
     :mode ("README\\.md\\'" . gfm-mode)
-    :init (setq markdown-command "multimarkdown")
+    :init (setq markdown-command "pandoc")
     :bind (:map markdown-mode-map
            ("C-c C-e" . markdown-do)))
+
+  (use-package markdown-toc
+    :ensure t
+    :after markdown-mode)
 #+end_src
 
 * Magit
